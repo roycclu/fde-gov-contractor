@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+{% block title %}GovTrack — Federal Procurement Intelligence{% endblock %}
+
+{% block content %}
+
+<!-- ── Hero ──────────────────────────────────────────────────────────────── -->
+<section class="bg-white border-b border-surface-border">
+  <div class="max-w-3xl mx-auto px-5 pt-14 pb-10 text-center">
+    <div class="inline-flex items-center gap-2 bg-brand-light text-brand text-xs font-semibold px-3.5 py-1.5 rounded-full mb-6">
+      <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
+      </svg>
+      Powered by Exa Semantic Search
+    </div>
+
+    <h1 class="text-[2.625rem] font-bold leading-[1.1] tracking-[-0.03em] text-ink mb-4">
+      Federal Procurement Intelligence
+    </h1>
+    <p class="text-ink-muted text-lg leading-relaxed max-w-xl mx-auto mb-10">
+      Semantic RFP discovery across SAM.gov, USASpending.gov, and procurement news —
+      built for growth-stage contractors who can't justify $15K/year for GovWin.
+    </p>
+
+    <!-- Search -->
+    <div class="relative max-w-2xl mx-auto">
+      <div class="flex items-center bg-white rounded-2xl shadow-search overflow-hidden transition-shadow focus-within:shadow-search-focus">
+        <div class="pl-4 pr-2 text-slate-400 flex-shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+        </div>
+        <input
+          id="queryInput"
+          type="text"
+          placeholder='Try "HHS cybersecurity" or "Army logistics"'
+          class="flex-1 px-3 py-4 text-[15px] text-ink placeholder-slate-400 bg-transparent border-none outline-none"
+          autocomplete="off"
+        />
+        <button
+          id="searchBtn"
+          onclick="runSearch()"
+          class="m-1.5 bg-brand hover:bg-brand-dark text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all active:scale-95 flex-shrink-0"
+        >
+          Search
+        </button>
+      </div>
+    </div>
+
+    <!-- Example chips -->
+    <div class="flex flex-wrap items-center justify-center gap-2 mt-5">
+      <span class="text-xs text-slate-400 font-medium">Quick search:</span>
+      {% for q in [
+        "HHS cybersecurity",
+        "Army logistics",
+        "DOE clean energy",
+        "DoD AI software",
+        "GSA cloud services",
+        "Navy shipbuilding",
+        "VA health IT",
+      ] %}
+      <button onclick="setQuery('{{ q }}')"
+        class="text-xs text-ink-muted border border-surface-border bg-white hover:border-brand hover:text-brand px-3 py-1.5 rounded-full transition-all">
+        {{ q }}
+      </button>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ── Value props strip ──────────────────────────────────────────────────── -->
+<section class="bg-white border-b border-surface-border">
+  <div class="max-w-5xl mx-auto px-5 py-5 grid grid-cols-3 gap-6 text-center text-xs text-ink-muted">
+    <div class="flex items-center justify-center gap-2">
+      <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span>SAM.gov &amp; USASpending.gov</span>
+    </div>
+    <div class="flex items-center justify-center gap-2">
+      <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      <span>Semantic — not keyword-only</span>
+    </div>
+    <div class="flex items-center justify-center gap-2">
+      <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span>$200/mo vs $15K/yr for GovWin</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── Results area ───────────────────────────────────────────────────────── -->
+<section class="max-w-3xl mx-auto px-5 py-10">
+  <div id="results"></div>
+</section>
+
+<!-- ── JS ─────────────────────────────────────────────────────────────────── -->
+<script>
+/* ── State ── */
+let allResults = [];
+let activeTab = 'all';
+
+/* ── Entry points ── */
+function setQuery(q) {
+  document.getElementById('queryInput').value = q;
+  runSearch();
+}
+
+async function runSearch() {
+  const query = document.getElementById('queryInput').value.trim();
+  if (!query) return;
+
+  const btn = document.getElementById('searchBtn');
+  btn.disabled = true;
+  btn.textContent = 'Searching…';
+  allResults = [];
+  activeTab = 'all';
+
+  showSkeleton();
+
+  try {
+    const resp = await fetch('/api/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query }),
+    });
+    const data = await resp.json();
+
+    if (data.error) { showError(data.error); return; }
+    if (!data.results?.length) { showEmpty(); return; }
+
+    allResults = data.results;
+    renderAll();
+
+  } catch (e) {
+    showError('Network error — ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Search';
+  }
+}
+
+/* ── Render ── */
+function renderAll() {
+  const counts = {
+    all:       allResults.length,
+    rfp:       allResults.filter(r => r.tag_class === 'rfp').length,
+    incumbent: allResults.filter(r => r.tag_class === 'incumbent').length,
+    news:      allResults.filter(r => r.tag_class === 'news').length,
+  };
+
+  const container = document.getElementById('results');
+  container.innerHTML = buildTabBar(counts) + '<div id="cardGrid" class="space-y-3 mt-5"></div>';
+
+  renderCards(activeTab);
+  attachTabListeners();
+}
+
+function buildTabBar(counts) {
+  const tabs = [
+    { key: 'all',       label: 'All',            n: counts.all       },
+    { key: 'rfp',       label: 'New RFP',         n: counts.rfp       },
+    { key: 'incumbent', label: 'Incumbent Intel',  n: counts.incumbent },
+    { key: 'news',      label: 'Agency News',      n: counts.news      },
+  ];
+
+  const pills = tabs.map(t => {
+    const isActive = t.key === activeTab;
+    const badgeBg = isActive ? 'bg-slate-100 text-ink-muted' : 'bg-white/60 text-slate-400';
+    return `
+      <button data-tab="${t.key}"
+        class="tab-btn ${isActive ? 'active' : ''} flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg">
+        ${escHtml(t.label)}
+        <span class="text-xs px-1.5 py-0.5 rounded-full ${badgeBg}">${t.n}</span>
+      </button>`;
+  }).join('');
+
+  const countLine = `<div class="text-xs text-ink-subtle mb-4">
+    ${counts.all} result${counts.all !== 1 ? 's' : ''} from SAM.gov, USASpending.gov &amp; procurement news
+  </div>`;
+
+  return countLine + `<div class="flex items-center gap-1 bg-slate-100 rounded-xl p-1 w-full overflow-x-auto">${pills}</div>`;
+}
+
+function attachTabListeners() {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeTab = btn.dataset.tab;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderCards(activeTab);
+    });
+  });
+}
+
+function renderCards(tabKey) {
+  const filtered = tabKey === 'all' ? allResults : allResults.filter(r => r.tag_class === tabKey);
+  const grid = document.getElementById('cardGrid');
+
+  if (!filtered.length) {
+    grid.innerHTML = `
+      <div class="text-center py-12 text-ink-subtle text-sm">
+        No results in this category.
+        <button onclick="document.querySelector('[data-tab=all]').click()"
+          class="ml-1 text-brand hover:underline">View all</button>
+      </div>`;
+    return;
+  }
+
+  const accentMap = { rfp: 'accent-rfp', incumbent: 'accent-incumbent', news: 'accent-news' };
+  const tagMap    = { rfp: 'tag-rfp',    incumbent: 'tag-incumbent',    news: 'tag-news'    };
+
+  grid.innerHTML = filtered.map((r, i) => {
+    const ac = accentMap[r.tag_class] || 'accent-news';
+    const tc = tagMap[r.tag_class]    || 'tag-news';
+    return `
+      <article class="result-card relative bg-white rounded-2xl shadow-card hover:shadow-card-hover overflow-hidden"
+               style="animation-delay:${i * .05}s">
+        <!-- accent bar -->
+        <div class="absolute left-0 inset-y-0 w-[3px] ${ac}"></div>
+        <div class="p-6 pl-7">
+          <!-- top row -->
+          <div class="flex items-start justify-between gap-3 mb-3">
+            <span class="${tc} text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0">${escHtml(r.tag)}</span>
+            ${r.date ? `<span class="text-xs text-ink-subtle flex-shrink-0">${escHtml(r.date)}</span>` : ''}
+          </div>
+          <!-- title -->
+          <h3 class="font-semibold text-ink text-[15px] leading-snug mb-2 tracking-[-0.01em]">${escHtml(r.title)}</h3>
+          <!-- summary -->
+          <p class="text-sm text-ink-muted leading-relaxed mb-3">${escHtml(r.summary)}</p>
+          <!-- why -->
+          <div class="why-box rounded-lg px-4 py-2.5 mb-4 text-[13px] text-slate-600 leading-relaxed">
+            <span class="font-semibold text-slate-700">Why this matters — </span>${escHtml(r.why)}
+          </div>
+          <!-- footer -->
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-ink-subtle font-mono">${escHtml(r.domain)}</span>
+            <a href="${escHtml(r.url)}" target="_blank" rel="noopener noreferrer"
+               class="flex items-center gap-1 text-brand font-semibold hover:underline">
+              View source
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+      </article>`;
+  }).join('');
+}
+
+/* ── States ── */
+function showSkeleton() {
+  const s = () => `
+    <div class="bg-white rounded-2xl shadow-card overflow-hidden">
+      <div class="p-6 pl-7 space-y-3">
+        <div class="flex justify-between"><div class="skeleton h-5 w-20"></div><div class="skeleton h-4 w-24"></div></div>
+        <div class="skeleton h-5 w-3/4"></div>
+        <div class="skeleton h-4 w-full"></div>
+        <div class="skeleton h-4 w-5/6"></div>
+        <div class="skeleton h-12 w-full rounded-lg"></div>
+        <div class="flex justify-between"><div class="skeleton h-3 w-24"></div><div class="skeleton h-3 w-20"></div></div>
+      </div>
+    </div>`;
+  document.getElementById('results').innerHTML = `
+    <div class="text-xs text-ink-subtle mb-4">Searching procurement databases…</div>
+    <div class="space-y-3">${s()}${s()}${s()}</div>`;
+}
+
+function showError(msg) {
+  document.getElementById('results').innerHTML = `
+    <div class="bg-red-50 border border-red-200 rounded-2xl p-6 text-sm text-red-700">
+      <div class="font-semibold mb-1">Search failed</div>
+      <div>${escHtml(msg)}</div>
+    </div>`;
+}
+
+function showEmpty() {
+  document.getElementById('results').innerHTML = `
+    <div class="text-center py-16">
+      <div class="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+      </div>
+      <div class="text-ink font-semibold mb-1">No results found</div>
+      <div class="text-sm text-ink-muted">Try a broader search term, a different agency, or a contract category.</div>
+    </div>`;
+}
+
+/* ── Utility ── */
+function escHtml(s) {
+  return String(s ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── Keyboard ── */
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('queryInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') runSearch();
+  });
+});
+</script>
+{% endblock %}

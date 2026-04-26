@@ -1,0 +1,20 @@
+# Python cache/artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Local environment files
+.env
+.evn
+*.env
+!.env.example
+
+# Editor/OS files
+.DS_Store
+.vscode/
+.idea/

@@ -5,7 +5,7 @@
 <div class="max-w-3xl mx-auto px-5 py-12">
 
   <!-- Back -->
-  <a href="/" class="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-ink mb-8 transition-colors group">
+  <a href="{{ request.url_for('root') }}" class="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-ink mb-8 transition-colors group">
     <svg class="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
     </svg>
@@ -248,7 +248,7 @@
       <div class="text-sm font-semibold text-ink mb-1">Try the live demo</div>
       <div class="text-xs text-ink-muted">Search any agency or contract category</div>
     </div>
-    <a href="/" class="bg-brand hover:bg-brand-dark text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all">
+    <a href="{{ request.url_for('root') }}" class="bg-brand hover:bg-brand-dark text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all">
       Open GovTrack →
     </a>
   </div>

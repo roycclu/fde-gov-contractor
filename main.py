@@ -43,11 +43,15 @@ async def root(request: Request):
 
 
 @app.get("/govtrack")
+@app.get("/govtrack/", include_in_schema=False)
 async def govtrack_redirect():
     return RedirectResponse("/")
 
 
 @app.get("/brief")
+@app.get("/brief/", include_in_schema=False)
+@app.get("/market-brief", include_in_schema=False)
+@app.get("/market-brief/", include_in_schema=False)
 async def brief(request: Request):
     return templates.TemplateResponse("brief.html", {"request": request})
 

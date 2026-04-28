@@ -1,257 +1,220 @@
 {% extends "base.html" %}
-{% block title %}Market Brief — ExaGov{% endblock %}
+{% block title %}Value Prop One Pager — ExaGov{% endblock %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto px-5 py-12">
-
-  <!-- Back -->
-  <a href="{{ request.url_for('root') }}" class="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-ink mb-8 transition-colors group">
+<div class="max-w-4xl mx-auto px-5 py-10">
+  <a href="{{ request.url_for('root') }}" class="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-ink mb-6 transition-colors group">
     <svg class="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
     </svg>
     Back to ExaGov
   </a>
 
-  <!-- Header -->
-  <div class="mb-10">
+  <div class="bg-white rounded-2xl border border-surface-border shadow-card p-7 md:p-8 prose-brief">
     <div class="inline-flex items-center gap-2 bg-brand-light text-brand text-xs font-semibold px-3 py-1.5 rounded-full mb-4">
-      Market Intelligence Brief
+      Value Prop One Pager
     </div>
-    <h1 class="text-[2rem] font-bold tracking-[-0.025em] text-ink mb-3">
-      ExaGov — Why Government Contracting?
+
+    <h1 class="text-[1.9rem] font-bold tracking-[-0.02em] text-ink mb-6">
+      ExaGov — Federal Procurement Intelligence for Growth-Stage Contractors
     </h1>
-    <p class="text-ink-muted text-base leading-relaxed">
-      A market sizing, competitive, and GTM brief for Exa's expansion into the
-      $700B+ federal procurement intelligence space.
-    </p>
-  </div>
 
-  <!-- Divider -->
-  <div class="border-t border-surface-border mb-10"></div>
-
-  <!-- Content -->
-  <div class="prose-brief">
-
-    <h2>Use Case</h2>
-    <p>
-      Every year, the US federal government awards <strong>over $700 billion in contracts</strong>.
-      To compete, government contractors need to identify relevant opportunities, understand
-      who currently holds the contract (the "incumbent"), track agency budget priorities,
-      and build their pipeline months in advance of solicitation release.
-    </p>
-    <p>Today, that workflow looks like this:</p>
+    <h2>1. The Problem</h2>
     <ul>
-      <li>Manual keyword searches on SAM.gov</li>
-      <li>Spreadsheet tracking of agency spending on USASpending.gov</li>
-      <li>Google Alerts for agency news</li>
-      <li>$12–18K/year GovWin IQ subscription — if the firm can afford it</li>
-    </ul>
-    <p>
-      ExaGov replaces that fragmented workflow with a single semantic search interface.
-      A BD manager types <em>"HHS cybersecurity"</em> and surfaces live RFPs, incumbent award
-      history, and agency priority signals — instantly, across sources that keyword search misses.
-    </p>
-    <p>
-      <strong>Where it fits in the BD workflow:</strong> ExaGov is a daily-use tool.
-      BD teams open it each morning to check for new solicitations, monitor agency news,
-      and build their opportunity pipeline. It complements (but doesn't require) a formal
-      capture management platform like Shipley or Deltek.
-    </p>
-
-    <h2>User Persona</h2>
-
-    <h3>Primary — Capture Manager / BD Director</h3>
-    <ul>
-      <li><strong>Firm size:</strong> $5M–$50M annual revenue, 20–250 employees</li>
-      <li><strong>NAICS focus:</strong> IT, professional services, logistics, engineering, health IT</li>
-      <li><strong>Pain:</strong> Doing the job of a 3-person BD team alone. GovWin is too expensive
-          to justify; SAM.gov is too slow and keyword-limited. Misses opportunities because
-          the search surface is too narrow.</li>
-      <li><strong>Budget authority:</strong> Recommends tools to VP/CEO; typical SaaS spend tolerance
-          $150–$500/month per seat</li>
-      <li><strong>Daily behavior:</strong> Checks SAM.gov + Google + industry newsletters;
-          maintains an opportunity pipeline in Excel or Salesforce</li>
+      <li>$700B in federal contracts awarded annually, but discovery is broken.</li>
+      <li>BD managers spend 2+ hours daily across SAM.gov, Google, and trade press manually.</li>
+      <li>GovWin costs $15K/year, out of reach for most mid-market firms.</li>
     </ul>
 
-    <h3>Secondary — SBIR / 8(a) / New Entrant</h3>
+    <h2>2. Why Exa Wins</h2>
     <ul>
-      <li>Early-stage firms with a technical capability but no existing GovCon infrastructure</li>
-      <li>Cannot justify $15K/year for GovWin; price-sensitive; will pay $99–$199/month</li>
-      <li>Need help finding the right agencies and set-aside vehicles before they exist as known entities</li>
+      <li>Semantic search finds intent-matched RFPs that keyword tools miss.</li>
+      <li>Multi-source ingestion combines SAM.gov, USASpending, and agency news in one query.</li>
+      <li>Real-time indexing surfaces opportunities 24-48 hours before aggregators.</li>
     </ul>
 
-    <h2>Competitive Landscape</h2>
-
+    <h2>3. Market Opportunity</h2>
     <table>
       <thead>
-        <tr>
-          <th>Tool</th>
-          <th>Price</th>
-          <th>Strength</th>
-          <th>Key Weakness</th>
-        </tr>
+        <tr><th>Metric</th><th>Value</th></tr>
       </thead>
       <tbody>
-        <tr>
-          <td><strong>GovWin IQ</strong> (Deltek)</td>
-          <td>$12–18K/yr</td>
-          <td>Deep pipeline, relationship data</td>
-          <td>Keyword search, expensive, complex UI</td>
-        </tr>
-        <tr>
-          <td><strong>Bloomberg Government</strong></td>
-          <td>$15K/yr</td>
-          <td>News + data breadth</td>
-          <td>Not GovCon-specific, no semantic search</td>
-        </tr>
-        <tr>
-          <td><strong>Deltek Costpoint</strong></td>
-          <td>$10–15K/yr</td>
-          <td>ERP integration</td>
-          <td>Enterprise-only, not a search tool</td>
-        </tr>
-        <tr>
-          <td><strong>GovTribe / Govly</strong></td>
-          <td>$2–6K/yr</td>
-          <td>Mid-market focus</td>
-          <td>Keyword-based, limited news ingestion</td>
-        </tr>
-        <tr>
-          <td><strong>SAM.gov</strong></td>
-          <td>Free</td>
-          <td>Authoritative source</td>
-          <td>Keyword-only, no incumbent data, no news</td>
-        </tr>
-        <tr>
-          <td><strong>USASpending.gov</strong></td>
-          <td>Free</td>
-          <td>Historical award data</td>
-          <td>Lookup only — no discovery workflow</td>
-        </tr>
-        <tr>
-          <td><strong>ExaGov (Exa)</strong></td>
-          <td>~$200/mo</td>
-          <td>Semantic search, real-time, multi-source</td>
-          <td>Early-stage, no pipeline management yet</td>
-        </tr>
+        <tr><td>Total federal procurement</td><td><strong>$737B</strong></td></tr>
+        <tr><td>Active mid-market contractors</td><td><strong>~130,000</strong></td></tr>
+        <tr><td>Addressable at $200/month</td><td><strong>10,000-30,000 firms</strong></td></tr>
+        <tr><td>ARR potential</td><td><strong>$24M-$72M</strong></td></tr>
       </tbody>
     </table>
 
-    <p>
-      The key moat: <strong>Exa's neural retrieval catches intent, not just keywords.</strong>
-      A BD manager searching "Army decision support" may not use the exact phrase in the solicitation.
-      Keyword tools miss it. Exa finds it.
-    </p>
-
-    <h2>Market Opportunity</h2>
-    <ul>
-      <li><strong>Total federal procurement:</strong> $737B/year (FY2023)</li>
-      <li><strong>Registered small businesses on SAM.gov:</strong> ~500,000</li>
-      <li><strong>Active GovCon firms:</strong> ~130,000 (received awards in past 3 years)</li>
-      <li><strong>Addressable at $200/mo:</strong> 10,000–30,000 firms → <strong>$24M–$72M ARR</strong></li>
-      <li><strong>Expansion to agency procurement offices:</strong> adds a separate enterprise segment</li>
-    </ul>
-    <p>
-      Most vendors ignore this market because it requires domain knowledge, government data literacy,
-      and a willingness to work with a fragmented customer base that is skeptical of new SaaS.
-      That friction is Exa's entry point — not a barrier.
-    </p>
-
-    <h2>Estimated Usage</h2>
+    <h2>4. Pilot Design (3 Weeks)</h2>
     <table>
       <thead>
-        <tr><th>Cadence</th><th>Use case</th></tr>
+        <tr><th>Week</th><th>Milestone</th></tr>
       </thead>
       <tbody>
-        <tr>
-          <td><strong>Daily</strong></td>
-          <td>New RFP monitoring — BD team checks for solicitations in their NAICS/agency focus areas</td>
-        </tr>
-        <tr>
-          <td><strong>Weekly</strong></td>
-          <td>Pipeline reviews — pull incumbent intel and contract values to qualify or retire opportunities</td>
-        </tr>
-        <tr>
-          <td><strong>Monthly</strong></td>
-          <td>Agency intelligence — track budget submissions, NDAA provisions, agency priority shifts</td>
-        </tr>
-        <tr>
-          <td><strong>Pre-proposal</strong></td>
-          <td>Deep incumbent research — identify past performance data before writing a proposal</td>
-        </tr>
+        <tr><td><strong>Week 1</strong></td><td>Run current searches and compare output vs SAM.gov.</td></tr>
+        <tr><td><strong>Week 2</strong></td><td>Surface 3 RFPs missed by keyword search.</td></tr>
+        <tr><td><strong>Week 3</strong></td><td>Pull incumbent intel on top pipeline opportunities.</td></tr>
       </tbody>
     </table>
 
-    <h2>Why Exa Wins Here</h2>
-    <ul>
-      <li>
-        <strong>Semantic retrieval</strong> catches plain-language opportunities that SAM.gov
-        keyword filters miss — especially early-stage market research notices and
-        industry day announcements
-      </li>
-      <li>
-        <strong>Multi-source ingestion</strong> eliminates the need to check 4+ sites manually —
-        SAM.gov, USASpending, agency news, procurement trade press all in one query
-      </li>
-      <li>
-        <strong>Real-time indexing</strong> surfaces opportunities before they hit aggregators
-        like GovWin, giving early movers a 24–48 hour head start on teaming conversations
-      </li>
-      <li>
-        <strong>No hallucinations</strong> — Exa returns citations, not generated summaries.
-        In a compliance-sensitive market, sourced retrieval is a trust and regulatory advantage
-      </li>
-    </ul>
-
-    <h2>Sales Barriers &amp; How to Overcome Them</h2>
+    <h2>5. Sales Barriers</h2>
     <table>
       <thead>
         <tr><th>Barrier</th><th>Response</th></tr>
       </thead>
       <tbody>
         <tr>
-          <td>Risk aversion — "We've used GovWin for years"</td>
-          <td>Offer a 14-day free pilot on their actual pipeline queries. ROI is immediate and visible.</td>
+          <td>Risk aversion: "We already use GovWin."</td>
+          <td>Run a side-by-side pilot using their live pipeline queries and show measurable lift.</td>
         </tr>
         <tr>
-          <td>IT/security review for SaaS onboarding</td>
-          <td>No PII or sensitive data flows through ExaGov — it's a read-only search surface. FedRAMP path is medium-term.</td>
-        </tr>
-        <tr>
-          <td>Budget cycle timing</td>
-          <td>Target the BD director directly — $200/mo is within discretionary budget at most firms; doesn't need procurement approval.</td>
+          <td>Security onboarding friction</td>
+          <td>Position ExaGov as read-only retrieval with cited sources and no PII ingestion.</td>
         </tr>
         <tr>
           <td>"SAM.gov is free"</td>
-          <td>Frame around time cost, not tool cost. If a BD manager spends 2 hours/day on manual search at $80/hr, that's $40K/year in hidden cost.</td>
+          <td>Reframe to labor ROI: 2 hours/day manual search is materially more expensive than $200/month.</td>
         </tr>
       </tbody>
     </table>
 
-    <h2>Pilot / POC Design</h2>
-    <p>
-      A compelling pilot runs for <strong>30 days</strong> with 2–3 BD managers at a target firm:
-    </p>
-    <ul>
-      <li>Week 1: Run their current active searches through ExaGov — compare results to SAM.gov output</li>
-      <li>Week 2: Surface 3 RFPs they would not have found with keywords alone</li>
-      <li>Week 3–4: Pull incumbent intel on their top 5 pipeline opportunities</li>
-      <li>Measure: Opportunities found, time saved, incumbent IDs surfaced</li>
-      <li>Close: Show that Exa found relevant opportunities 24–48 hours before GovWin indexed them</li>
-    </ul>
+    <details open class="mt-6 rounded-xl border border-surface-border bg-surface-raised">
+      <summary class="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-ink">
+        Supplemental Research Appendix
+      </summary>
+      <div class="px-4 pb-4 space-y-6 text-sm text-ink-muted">
+        <section>
+          <div class="font-semibold text-ink mb-2">1) Competitive Landscape Synthesis</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Solution</th>
+                <th>Typical Price</th>
+                <th>Coverage</th>
+                <th>Retrieval Style</th>
+                <th>Mid-Market Fit</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>GovWin IQ</strong></td>
+                <td>$12K-$18K/yr</td>
+                <td>Deep contract + relationship intel</td>
+                <td>Keyword / filter-heavy</td>
+                <td>Low (cost + complexity)</td>
+              </tr>
+              <tr>
+                <td><strong>Bloomberg Government</strong></td>
+                <td>~$15K/yr</td>
+                <td>Broad policy + procurement signals</td>
+                <td>Keyword + newsroom workflow</td>
+                <td>Low-Medium</td>
+              </tr>
+              <tr>
+                <td><strong>GovTribe / Govly</strong></td>
+                <td>$2K-$6K/yr</td>
+                <td>Opportunity monitoring</td>
+                <td>Keyword-centered discovery</td>
+                <td>Medium</td>
+              </tr>
+              <tr>
+                <td><strong>SAM.gov + USASpending</strong></td>
+                <td>Free</td>
+                <td>Authoritative point sources</td>
+                <td>Manual search / lookup</td>
+                <td>High (time-cost heavy)</td>
+              </tr>
+              <tr>
+                <td><strong>ExaGov</strong></td>
+                <td>~$200/mo</td>
+                <td>SAM + spending + news unified</td>
+                <td>Semantic retrieval + recency filters</td>
+                <td><strong>High</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
 
+        <section>
+          <div class="font-semibold text-ink mb-2">2) Persona Synthesis</div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="rounded-xl border border-surface-border bg-white p-3">
+              <div class="text-sm font-semibold text-ink">Primary: Capture Manager / BD Director</div>
+              <div class="text-xs mt-1">Firm profile: $5M-$50M revenue, 20-250 employees</div>
+              <div class="text-xs mt-1">Core pain: fragmented discovery stack and missed RFP windows</div>
+              <div class="text-xs mt-1">Success metric: more qualified opportunities per week</div>
+            </div>
+            <div class="rounded-xl border border-surface-border bg-white p-3">
+              <div class="text-sm font-semibold text-ink">Secondary: SBIR / 8(a) Emerging Teams</div>
+              <div class="text-xs mt-1">Firm profile: early-stage entrants with lean BD capacity</div>
+              <div class="text-xs mt-1">Core pain: cannot justify enterprise intelligence tooling</div>
+              <div class="text-xs mt-1">Success metric: first repeatable pipeline with incumbent context</div>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <div class="font-semibold text-ink mb-2">3) Usage Cadence Breakdown</div>
+          <div class="space-y-2">
+            <div class="rounded-lg border border-surface-border bg-white p-2.5">
+              <div class="flex items-center justify-between text-xs mb-1">
+                <span class="font-semibold text-ink">Daily: New RFP monitoring</span>
+                <span>40%</span>
+              </div>
+              <div class="h-2 bg-slate-100 rounded"><div class="h-2 bg-brand rounded w-2/5"></div></div>
+            </div>
+            <div class="rounded-lg border border-surface-border bg-white p-2.5">
+              <div class="flex items-center justify-between text-xs mb-1">
+                <span class="font-semibold text-ink">Weekly: Pipeline triage + qualification</span>
+                <span>30%</span>
+              </div>
+              <div class="h-2 bg-slate-100 rounded"><div class="h-2 bg-brand rounded" style="width:30%"></div></div>
+            </div>
+            <div class="rounded-lg border border-surface-border bg-white p-2.5">
+              <div class="flex items-center justify-between text-xs mb-1">
+                <span class="font-semibold text-ink">Monthly: Agency signal tracking</span>
+                <span>20%</span>
+              </div>
+              <div class="h-2 bg-slate-100 rounded"><div class="h-2 bg-brand rounded" style="width:20%"></div></div>
+            </div>
+            <div class="rounded-lg border border-surface-border bg-white p-2.5">
+              <div class="flex items-center justify-between text-xs mb-1">
+                <span class="font-semibold text-ink">Pre-proposal: Incumbent deep-dive</span>
+                <span>10%</span>
+              </div>
+              <div class="h-2 bg-slate-100 rounded"><div class="h-2 bg-brand rounded" style="width:10%"></div></div>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <div class="font-semibold text-ink mb-2">4) Why This Market Is Under-Served</div>
+          <table>
+            <thead>
+              <tr><th>Market Friction</th><th>Observed Impact</th><th>ExaGov Positioning</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Fragmented source landscape</td>
+                <td>Analysts switch tools all day; high context loss</td>
+                <td>Unified retrieval surface with one query workflow</td>
+              </tr>
+              <tr>
+                <td>Keyword-first incumbent tools</td>
+                <td>Intent mismatch causes missed opportunities</td>
+                <td>Semantic search captures meaning over phrasing</td>
+              </tr>
+              <tr>
+                <td>Pricing mismatch for mid-market</td>
+                <td>High-end products price out core users</td>
+                <td>$200/month wedge with measurable labor ROI</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+    </details>
   </div>
-
-  <!-- Bottom CTA -->
-  <div class="mt-12 pt-8 border-t border-surface-border flex items-center justify-between">
-    <div>
-      <div class="text-sm font-semibold text-ink mb-1">Try the live demo</div>
-      <div class="text-xs text-ink-muted">Search any agency or contract category</div>
-    </div>
-    <a href="{{ request.url_for('root') }}" class="bg-brand hover:bg-brand-dark text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all">
-      Open ExaGov →
-    </a>
-  </div>
-
 </div>
 {% endblock %}

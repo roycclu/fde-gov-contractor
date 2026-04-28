@@ -53,7 +53,7 @@ BUSINESS_TYPE_HINTS = {
         "cyber operations",
         "CMMC",
     ],
-    "Logistics and supply chain (like EAGLE II)": [
+    "Logistics and supply chain": [
         "fleet maintenance",
         "warehousing",
         "distribution support",

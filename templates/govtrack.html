@@ -38,54 +38,22 @@
     margin: 0;
     padding: 0;
   }
-  .search-panel {
-    width: 100%;
-    max-width: 66rem;
-    transition: max-width .3s ease;
-  }
-  body.has-searched .search-panel {
-    max-width: 76rem;
-  }
-  .search-wrap {
-    border: 1px solid #cfd9ea;
-    background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
-  }
+  .search-panel { width: 100%; max-width: 66rem; transition: max-width .3s ease; }
+  body.has-searched .search-panel { max-width: 76rem; }
+  .search-wrap { border: 1px solid #cfd9ea; background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%); }
   #quickSelect {
-    max-height: 220px;
-    overflow: hidden;
-    opacity: 1;
-    transform: translateY(0);
+    max-height: 220px; overflow: hidden; opacity: 1; transform: translateY(0);
     transition: opacity .25s ease, max-height .32s ease, transform .25s ease, margin .32s ease;
   }
   body.has-searched #quickSelect {
-    opacity: 0;
-    max-height: 0;
-    transform: translateY(-6px);
-    pointer-events: none;
-    margin-top: 0 !important;
+    opacity: 0; max-height: 0; transform: translateY(-6px); pointer-events: none; margin-top: 0 !important;
   }
-  .qs-pill {
-    transition: background-color .15s ease, border-color .15s ease, color .15s ease;
-  }
-  .qs-pill.active {
-    background-color: #EAF0FA;
-    border-color: #0A2A66;
-    color: #0A2A66;
-    font-weight: 600;
-  }
-  body.has-searched #queryInput {
-    padding-top: .5rem;
-    padding-bottom: .5rem;
-  }
-  .query-overlay {
-    background: rgba(6, 20, 46, 0.48);
-  }
-  .config-drawer, .source-panel {
-    transition: transform .28s ease;
-  }
-  .config-drawer.closed, .source-panel.closed {
-    transform: translateX(100%);
-  }
+  .qs-pill { transition: background-color .15s ease, border-color .15s ease, color .15s ease; }
+  .qs-pill.active { background-color: #0A2A66; border-color: #0A2A66; color: #ffffff; font-weight: 700; }
+  body.has-searched #queryInput { padding-top: .5rem; padding-bottom: .5rem; }
+  .query-overlay { background: rgba(6, 20, 46, 0.48); }
+  .config-drawer, .source-panel { transition: transform .28s ease; }
+  .config-drawer.closed, .source-panel.closed { transform: translateX(100%); }
 </style>
 
 <section class="max-w-6xl mx-auto px-5">
@@ -134,7 +102,7 @@
 
       <div id="quickSelect" class="mt-5 space-y-2.5">
         <div class="flex items-center flex-wrap gap-2">
-          <span class="text-[11px] font-semibold text-ink-subtle tracking-[0.14em] uppercase">Popular Search</span>
+          <span class="text-xs text-ink-subtle">Popular search:</span>
           <button onclick="setQuery('DoD cyber operations services')" class="qs-pill text-xs border border-surface-border bg-white px-3 py-1.5 rounded-full text-ink-muted hover:border-brand hover:text-brand">DoD cyber operations services</button>
           <button onclick="setQuery('VA healthcare analytics modernization')" class="qs-pill text-xs border border-surface-border bg-white px-3 py-1.5 rounded-full text-ink-muted hover:border-brand hover:text-brand">VA healthcare analytics modernization</button>
           <button onclick="setQuery('Army logistics sustainment')" class="qs-pill text-xs border border-surface-border bg-white px-3 py-1.5 rounded-full text-ink-muted hover:border-brand hover:text-brand">Army logistics sustainment</button>
@@ -143,8 +111,8 @@
 
         <div class="flex items-center flex-wrap gap-2">
           <span class="text-xs text-ink-subtle">Business Types:</span>
-          {% for bt in business_types %}
-          <button onclick="toggleBusinessType({{ bt | tojson }})" data-bt="{{ bt }}"
+          {% for bt in business_types[:3] %}
+          <button type="button" data-role="business-pill" data-bt="{{ bt }}"
             class="qs-pill text-xs border border-surface-border bg-white px-3 py-1.5 rounded-full text-ink-muted hover:border-brand hover:text-brand">
             {{ bt }}
           </button>
@@ -179,6 +147,10 @@
   </div>
   <div class="px-5 py-5 space-y-6">
     <section>
+      <h3 class="text-sm font-semibold text-ink mb-2">Business types</h3>
+      <div id="businessTypes" class="space-y-2"></div>
+    </section>
+    <section>
       <h3 class="text-sm font-semibold text-ink mb-2">Federal procurement sites</h3>
       <div id="federalSites" class="space-y-2"></div>
     </section>
@@ -187,16 +159,12 @@
       <div id="stateSites" class="space-y-2"></div>
     </section>
     <section>
-      <h3 class="text-sm font-semibold text-ink mb-2">Business types</h3>
-      <div id="businessTypes" class="space-y-2"></div>
-    </section>
-    <section>
       <h3 class="text-sm font-semibold text-ink mb-2">Additional queries <span class="font-normal text-ink-subtle">(one per line)</span></h3>
       <p class="text-[11px] text-ink-subtle mb-2">Business type selections from the quick strip and this drawer are combined.</p>
       <textarea id="additionalQueries" rows="4" placeholder="e.g. set-aside small business&#10;e.g. recompete window"
         class="w-full px-3 py-2.5 rounded-xl border border-surface-border text-sm text-ink placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-brand/30"></textarea>
     </section>
-    <button onclick="closeConfigDrawer()" class="w-full bg-brand hover:bg-brand-dark text-white text-sm font-semibold rounded-xl py-2.5">Apply configuration</button>
+    <button onclick="applyConfiguration()" class="w-full bg-brand hover:bg-brand-dark text-white text-sm font-semibold rounded-xl py-2.5">Apply configuration</button>
   </div>
 </aside>
 
@@ -228,11 +196,11 @@
   <div class="px-5 py-5 space-y-4">
     <h3 id="sourceTitle" class="text-lg font-semibold text-ink"></h3>
     <p id="sourceSummary" class="text-sm text-ink-muted leading-relaxed"></p>
-    <section>
+    <section id="sourceHighlightsSection">
       <div class="text-xs font-semibold text-ink-subtle uppercase tracking-wide mb-1.5">Highlights</div>
       <div id="sourceHighlights" class="space-y-2 text-sm text-ink-muted"></div>
     </section>
-    <section>
+    <section id="sourceExcerptSection">
       <div class="text-xs font-semibold text-ink-subtle uppercase tracking-wide mb-1.5">Content Excerpt</div>
       <pre id="sourceExcerpt" class="whitespace-pre-wrap bg-slate-50 border border-surface-border rounded-xl p-4 text-xs text-slate-700"></pre>
     </section>
@@ -272,11 +240,8 @@ function toggleDateRange(days) {
   if (days === null) selectedDateDays = null;
   else selectedDateDays = selectedDateDays === days ? null : days;
   document.querySelectorAll(".date-pill").forEach((btn) => {
-    if (!selectedDateDays && btn.dataset.days === "") {
-      btn.classList.add("active");
-    } else {
-      btn.classList.toggle("active", btn.dataset.days === selectedDateDays);
-    }
+    if (!selectedDateDays && btn.dataset.days === "") btn.classList.add("active");
+    else btn.classList.toggle("active", btn.dataset.days === selectedDateDays);
   });
 }
 
@@ -327,11 +292,16 @@ function closeConfigDrawer() {
   document.getElementById("configDrawer").classList.add("closed");
 }
 
+function applyConfiguration() {
+  closeConfigDrawer();
+  const query = document.getElementById("queryInput").value.trim();
+  if (query) runSearch();
+}
+
 function openQueryModal() {
   const dump = {
     query: lastSearchContext.query || document.getElementById("queryInput").value.trim(),
     include_domains: lastSearchContext.include_domains || getSelectedDomains(),
-    business_types: lastSearchContext.business_types || getSelectedBusinessTypes(),
     additional_queries: lastSearchContext.additional_queries || getAdditionalQueries(),
     start_published_date: lastSearchContext.start_published_date || getStartPublishedDate(),
   };
@@ -350,11 +320,18 @@ function openSourcePanel(index) {
   if (!item) return;
   document.getElementById("sourceTitle").textContent = item.title || "Untitled";
   document.getElementById("sourceMeta").textContent = [item.domain || "", item.date || ""].filter(Boolean).join(" · ");
-  document.getElementById("sourceSummary").textContent = item.summary || "No summary available.";
-  document.getElementById("sourceExcerpt").textContent = item.source_excerpt || "No additional content excerpt available.";
+  const highlights = Array.isArray(item.highlights) ? item.highlights.filter(Boolean) : [];
+  const excerpt = (item.source_excerpt || "").trim();
+  const summary = (item.summary || "").trim();
+
+  // Prefer Exa-returned rich content first; fallback to summary if needed.
+  const summaryForPanel = excerpt ? excerpt.slice(0, 500) : (summary || "");
+  document.getElementById("sourceSummary").textContent = summaryForPanel;
+  document.getElementById("sourceExcerpt").textContent = excerpt ? excerpt.slice(0, 500) : (summary || "");
   document.getElementById("sourceOpenLink").href = item.url || "#";
-  const highlights = (item.highlights || []).map((line) => `<div class="rounded-lg border border-surface-border bg-white px-3 py-2">${escHtml(line)}</div>`).join("");
-  document.getElementById("sourceHighlights").innerHTML = highlights || '<div class="text-xs text-ink-subtle">No highlights available.</div>';
+  document.getElementById("sourceHighlights").innerHTML = highlights.map((line) => `<div class="rounded-lg border border-surface-border bg-white px-3 py-2">${escHtml(line)}</div>`).join("");
+  document.getElementById("sourceHighlightsSection").classList.toggle("hidden", highlights.length === 0);
+  document.getElementById("sourceExcerptSection").classList.toggle("hidden", !(excerpt || summary));
   document.getElementById("sourceBackdrop").classList.remove("hidden");
   document.getElementById("sourcePanel").classList.remove("closed");
 }
@@ -366,17 +343,138 @@ function closeSourcePanel() {
 
 function syncBusinessTypeUI() {
   document.querySelectorAll("[data-bt]").forEach((btn) => {
-    btn.classList.toggle("active", selectedBusinessTypes.has(btn.dataset.bt));
+    const isSelected = selectedBusinessTypes.has(btn.dataset.bt);
+    btn.classList.toggle("active", isSelected);
+    btn.setAttribute("aria-pressed", isSelected ? "true" : "false");
   });
   document.querySelectorAll(".business-type").forEach((cb) => {
     cb.checked = selectedBusinessTypes.has(cb.value);
   });
 }
 
+function parseExplicitAmountMillions(text) {
+  if (!text) return null;
+  const t = String(text);
+  const values = [];
+  const unitRe = /\$?\s*(\d{1,3}(?:,\d{3})*(?:\.\d+)?)\s*(billion|million|bn|mn|m|b)\b/gi;
+  let m;
+  while ((m = unitRe.exec(t)) !== null) {
+    const num = parseFloat(m[1].replace(/,/g, ""));
+    if (!Number.isFinite(num)) continue;
+    const unit = m[2].toLowerCase();
+    values.push(unit.startsWith("b") ? num * 1000 : num);
+  }
+  const plainDollarRe = /\$\s*(\d{1,3}(?:,\d{3})+)(?!\s*(million|billion|m|b))/gi;
+  while ((m = plainDollarRe.exec(t)) !== null) {
+    const num = parseFloat(m[1].replace(/,/g, ""));
+    if (Number.isFinite(num)) values.push(num / 1_000_000);
+  }
+  if (!values.length) return null;
+  return Math.max(...values);
+}
+
+function inferDefaultAmountMillions(result) {
+  const text = `${result.title || ""} ${result.summary || ""} ${result.source_excerpt || ""}`.toLowerCase();
+  const hasDod = /(^|\W)(dod|defense|department of defense|army|navy|air force)(\W|$)/.test(text);
+  const hasCyberIt = /(^|\W)(cyber|cybersecurity|it|information technology|cloud|software)(\W|$)/.test(text);
+  if (hasDod && hasCyberIt) return 5;
+  if (/(logistics|supply chain|transport|warehouse|sustainment)/.test(text)) return 10;
+  if (/(professional services|consulting|advisory|program management)/.test(text)) return 3;
+  if (/(healthcare|health it|clinical|life sciences|biomedical)/.test(text)) return 4;
+  return 3;
+}
+
+function computeEstimatedOpportunityMillions() {
+  const rfp = allResults.filter((r) => r.tag_class === "rfp");
+  let total = 0;
+  for (const item of rfp) {
+    const explicit = parseExplicitAmountMillions(`${item.title || ""} ${item.summary || ""} ${item.source_excerpt || ""}`);
+    total += explicit ?? inferDefaultAmountMillions(item);
+  }
+  return { totalMillions: total, count: rfp.length };
+}
+
+function formatOpportunity(totalMillions) {
+  if (totalMillions >= 1000) return `~$${(totalMillions / 1000).toFixed(1)}B`;
+  return `~$${Math.round(totalMillions)}M`;
+}
+
+function extractContractVehicle(text) {
+  const patterns = [
+    ["IDIQ", /\bidiq\b/i],
+    ["BOA", /\bboa\b/i],
+    ["BPA", /\bbpa\b/i],
+    ["Set-aside", /\bset[-\s]?aside\b/i],
+    ["Sole source", /\bsole source\b/i],
+    ["RFI", /\brfi\b|request for information/i],
+    ["RFP", /\brfp\b|request for proposal/i],
+    ["Sources sought", /sources?\s+sought/i],
+  ];
+  for (const [label, re] of patterns) {
+    if (re.test(text)) return label;
+  }
+  return "";
+}
+
+function extractSetAsideStatus(text) {
+  const patterns = [
+    ["8(a)", /\b8\(a\)\b|\b8a\b/i],
+    ["SDVOSB", /\bsdv?osb\b/i],
+    ["WOSB", /\bwosb\b/i],
+    ["HUBZone", /\bhubzone\b/i],
+    ["Small business", /small business/i],
+  ];
+  for (const [label, re] of patterns) {
+    if (re.test(text)) return label;
+  }
+  return "";
+}
+
+function extractDeadline(text) {
+  const re = /(?:due date|closing date|proposals?\s+due|submit by)\s*[:\-]?\s*(\d{4}-\d{2}-\d{2}|[A-Za-z]{3,9}\s+\d{1,2},?\s+\d{4}|\d{1,2}\/\d{1,2}\/\d{2,4})/i;
+  const m = text.match(re);
+  return m ? m[1] : "";
+}
+
+function extractIncumbentHint(text) {
+  const re = /(currently performed by|incumbent|existing contract held by)([^.\n]{0,100})/i;
+  const m = text.match(re);
+  if (!m) return "";
+  return `${m[1]}${m[2] || ""}`.trim().replace(/\s+/g, " ");
+}
+
+function extractBdIntel(result) {
+  const corpus = `${result.title || ""} ${result.summary || ""} ${result.source_excerpt || ""}`;
+  return {
+    contractVehicle: extractContractVehicle(corpus),
+    setAsideStatus: extractSetAsideStatus(corpus),
+    deadline: extractDeadline(corpus),
+    incumbentHint: extractIncumbentHint(corpus),
+  };
+}
+
+function isGenericSamResult(result) {
+  const rawUrl = String(result.url || "").trim().toLowerCase();
+  const normalized = rawUrl
+    .replace(/^https?:\/\//, "")
+    .replace(/^www\./, "")
+    .replace(/\/+$/, "");
+  const title = String(result.title || "").toLowerCase();
+
+  if (normalized === "sam.gov") return true;
+  const genericTitle = (
+    title.includes("contract opportunities | sam.gov") ||
+    title.includes("find contract opportunities")
+  );
+  if (genericTitle && !(/[a-z0-9]{4,}/i.test(String(result.summary || "")))) {
+    return true;
+  }
+  return false;
+}
+
 async function runSearch() {
   const query = document.getElementById("queryInput").value.trim();
   if (!query) return;
-
   document.body.classList.add("has-searched");
   document.getElementById("resultsStage").classList.remove("hidden");
   document.getElementById("seeQueryBtn").classList.remove("hidden");
@@ -405,15 +503,10 @@ async function runSearch() {
     });
     const data = await resp.json();
     lastSearchContext = data.search_context || payload;
-    if (data.error) {
-      showError(data.error);
-      return;
-    }
-    if (!data.results?.length) {
-      showEmpty();
-      return;
-    }
-    allResults = data.results;
+    if (data.error) { showError(data.error); return; }
+    if (!data.results?.length) { showEmpty(); return; }
+    allResults = (data.results || []).filter((r) => !isGenericSamResult(r));
+    if (!allResults.length) { showEmpty(); return; }
     renderAll();
   } catch (err) {
     showError("Network error: " + err.message);
@@ -431,9 +524,20 @@ function renderAll() {
     news: allResults.filter((r) => r.tag_class === "news").length,
   };
   const container = document.getElementById("results");
-  container.innerHTML = buildTabBar(counts) + '<div id="cardGrid" class="space-y-3 mt-5"></div>';
+  container.innerHTML = buildOpportunityBar() + buildTabBar(counts) + '<div id="cardGrid" class="space-y-3 mt-5"></div>';
   renderCards(activeTab);
   attachTabListeners();
+}
+
+function buildOpportunityBar() {
+  const { totalMillions, count } = computeEstimatedOpportunityMillions();
+  return `
+    <div class="mb-3 max-w-md rounded-xl bg-slate-100 border border-slate-200 px-4 py-3">
+      <div class="text-3xl font-semibold text-slate-800 leading-none">💰 ${formatOpportunity(totalMillions)}</div>
+      <div class="text-sm text-slate-700 mt-1">Estimated contract opportunity across ${count} RFPs</div>
+      <div class="text-[11px] text-ink-subtle mt-1">Estimated opportunity - actual values vary by solicitation</div>
+    </div>
+  `;
 }
 
 function buildTabBar(counts) {
@@ -478,22 +582,51 @@ function renderCards(tabKey) {
   }
   const accentMap = { rfp: "accent-rfp", incumbent: "accent-incumbent", news: "accent-news" };
   const tagMap = { rfp: "tag-rfp", incumbent: "tag-incumbent", news: "tag-news" };
-  grid.innerHTML = filtered.map((r, i) => `
+  grid.innerHTML = filtered.map((r, i) => {
+    const idx = allResults.indexOf(r);
+    const intel = extractBdIntel(r);
+    const vehicleVal = intel.contractVehicle || "Not specified";
+    const setAsideVal = intel.setAsideStatus || "Not specified";
+    const deadlineVal = intel.deadline || "Not specified";
+    const incumbentVal = intel.incumbentHint || "Not specified";
+    return `
     <article class="result-card relative bg-white rounded-2xl shadow-card hover:shadow-card-hover overflow-hidden" style="animation-delay:${i * .05}s">
       <div class="absolute left-0 inset-y-0 w-[3px] ${accentMap[r.tag_class] || "accent-news"}"></div>
       <div class="p-6 pl-7">
         <div class="flex items-start justify-between gap-3 mb-3">
-          <span class="${tagMap[r.tag_class] || "tag-news"} text-xs font-semibold px-2.5 py-1 rounded-full">${escHtml(r.tag)}</span>
-          ${r.date ? `<span class="text-xs text-ink-subtle">${escHtml(r.date)}</span>` : ""}
+          <div class="flex items-center flex-wrap gap-1.5">
+            <span class="${tagMap[r.tag_class] || "tag-news"} text-xs font-semibold px-2.5 py-1 rounded-full">${escHtml(r.tag)}</span>
+            ${intel.contractVehicle ? `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">${escHtml(intel.contractVehicle)}</span>` : ""}
+            ${intel.setAsideStatus ? `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">${escHtml(intel.setAsideStatus)}</span>` : ""}
+          </div>
+          <div class="text-right">
+            ${intel.deadline ? `<div class="text-[11px] font-semibold text-rose-700">Due ${escHtml(intel.deadline)}</div>` : ""}
+            ${r.date ? `<span class="text-xs text-ink-subtle">${escHtml(r.date)}</span>` : ""}
+          </div>
         </div>
         <h3 class="font-semibold text-ink text-[15px] leading-snug mb-2 tracking-[-0.01em]">${escHtml(r.title)}</h3>
         <p class="text-sm text-ink-muted leading-relaxed mb-3">${escHtml(r.summary)}</p>
-        <div class="why-box rounded-lg px-4 py-2.5 mb-4 text-[13px] text-slate-600 leading-relaxed">
-          <span class="font-semibold text-slate-700">Why this matters: </span>${escHtml(r.why)}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3 text-xs">
+          <div class="rounded-lg border border-surface-border bg-slate-50 px-2.5 py-2">
+            <div class="text-ink-subtle mb-0.5">Contract Vehicle</div>
+            <div class="text-ink">${escHtml(vehicleVal)}</div>
+          </div>
+          <div class="rounded-lg border border-surface-border bg-slate-50 px-2.5 py-2">
+            <div class="text-ink-subtle mb-0.5">Set-aside Status</div>
+            <div class="text-ink">${escHtml(setAsideVal)}</div>
+          </div>
+          <div class="rounded-lg border border-surface-border bg-slate-50 px-2.5 py-2">
+            <div class="text-ink-subtle mb-0.5">Submission Deadline</div>
+            <div class="text-ink">${escHtml(deadlineVal)}</div>
+          </div>
+          <div class="rounded-lg border border-surface-border bg-slate-50 px-2.5 py-2">
+            <div class="text-ink-subtle mb-0.5">Incumbent</div>
+            <div class="text-ink">${escHtml(incumbentVal)}</div>
+          </div>
         </div>
         <div class="flex items-center justify-between text-xs">
           <span class="text-ink-subtle font-mono">${escHtml(r.domain)}</span>
-          <button onclick="openSourcePanel(${allResults.indexOf(r)})" class="flex items-center gap-1 text-brand font-semibold hover:underline">
+          <button onclick="openSourcePanel(${idx})" class="flex items-center gap-1 text-brand font-semibold hover:underline">
             View source
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
@@ -501,7 +634,8 @@ function renderCards(tabKey) {
           </button>
         </div>
       </div>
-    </article>`).join("");
+    </article>`;
+  }).join("");
 }
 
 function showSkeleton() {
@@ -547,10 +681,20 @@ function renderBusinessTypeCheckboxes() {
   });
 }
 
+function bindBusinessTypePills() {
+  document.querySelectorAll("[data-role='business-pill']").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      toggleBusinessType(btn.dataset.bt);
+    });
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   renderCheckboxList("federalSites", FEDERAL_SITES, "federal-site", true);
   renderCheckboxList("stateSites", STATE_SITES, "state-site", false);
   renderBusinessTypeCheckboxes();
+  bindBusinessTypePills();
   syncBusinessTypeUI();
   document.getElementById("queryInput").addEventListener("keydown", (e) => {
     if (e.key === "Enter") runSearch();

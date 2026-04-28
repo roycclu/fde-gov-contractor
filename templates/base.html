@@ -3,31 +3,35 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>{% block title %}GovTrack{% endblock %}</title>
+  <title>{% block title %}ExaGov{% endblock %}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            brand: { DEFAULT: '#0052CC', dark: '#003D99', light: '#E8F0FF' },
-            ink:   { DEFAULT: '#0D1117', muted: '#64748B', subtle: '#94A3B8' },
-            surface: { DEFAULT: '#FFFFFF', raised: '#F4F6F9', border: '#E2E8F0' },
-            header: '#020C1B',
+            brand: { DEFAULT: '#0A2A66', dark: '#061B45', light: '#EAF0FA' },
+            ink:   { DEFAULT: '#0C1729', muted: '#4B5D79', subtle: '#8091AD' },
+            surface: { DEFAULT: '#FFFFFF', raised: '#F3F6FB', border: '#D9E1EE' },
+            header: '#06142E',
+            metallic: '#B89C56',
           },
-          fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] },
+          fontFamily: {
+            sans: ['Manrope', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+            display: ['Cormorant Garamond', 'ui-serif', 'Georgia', 'serif'],
+          },
           boxShadow: {
-            'card':      '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)',
-            'card-hover':'0 6px 24px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)',
-            'search':    '0 1px 3px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)',
-            'search-focus': '0 0 0 3px rgba(0,82,204,0.2)',
+            'card':      '0 8px 24px rgba(9, 24, 55, 0.08), 0 0 0 1px rgba(8, 28, 67, 0.06)',
+            'card-hover':'0 14px 30px rgba(9, 24, 55, 0.14), 0 0 0 1px rgba(8, 28, 67, 0.08)',
+            'search':    '0 6px 20px rgba(9, 24, 55, 0.12), 0 0 0 1px rgba(8, 28, 67, 0.08)',
+            'search-focus': '0 0 0 3px rgba(10, 42, 102, 0.24)',
           }
         }
       }
     }
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 
   <style>
     /* ─── Tag colours ─── */
@@ -88,8 +92,8 @@
 
     /* ─── Why-box ─── */
     .why-box {
-      background: #F8FAFF;
-      border-left: 3px solid #93C5FD;
+      background: #F4F8FF;
+      border-left: 3px solid #6D89BE;
     }
 
     /* ─── Brief prose ─── */
@@ -126,7 +130,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
           </svg>
         </div>
-        <span class="text-white font-semibold text-[15px] tracking-[-0.01em]">GovTrack</span>
+        <span class="text-white font-semibold text-[15px] tracking-[0.02em]">ExaGov</span>
       </a>
 
       <!-- Nav -->
@@ -154,7 +158,7 @@
   <!-- ── Footer ─────────────────────────────────────────────────────── -->
   <footer class="border-t border-surface-border mt-20">
     <div class="max-w-5xl mx-auto px-5 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-ink-subtle">
-      <span>GovTrack — Exa FDE Take-home Demo</span>
+      <span>ExaGov — Exa FDE Take-home Demo</span>
       <div class="flex items-center gap-4">
         <a href="{{ request.url_for('brief') }}" class="hover:text-ink-muted transition-colors">Market Brief</a>
         <a href="https://exa.ai" target="_blank" class="hover:text-ink-muted transition-colors">Exa API</a>

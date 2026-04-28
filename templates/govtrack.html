@@ -1,298 +1,478 @@
 {% extends "base.html" %}
-{% block title %}GovTrack — Federal Procurement Intelligence{% endblock %}
+{% block title %}ExaGov — Federal Procurement Intelligence{% endblock %}
 
 {% block content %}
+<style>
+  .search-shell {
+    min-height: calc(100vh - 10rem);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: min-height .35s ease, padding .35s ease;
+    padding: 3.5rem 0 2.5rem;
+  }
+  body.has-searched .search-shell {
+    min-height: auto;
+    padding: 1.25rem 0 .75rem;
+  }
+  .hero-copy {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity .28s ease, transform .28s ease, max-height .28s ease;
+    max-height: 320px;
+  }
+  body.has-searched .hero-copy {
+    opacity: 0;
+    transform: translateY(-8px);
+    max-height: 0;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+  }
+  .search-panel {
+    width: 100%;
+    max-width: 66rem;
+    transition: max-width .3s ease;
+  }
+  body.has-searched .search-panel {
+    max-width: 78rem;
+  }
+  .search-wrap {
+    border: 1px solid #cfd9ea;
+    background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+  }
+  .query-overlay {
+    background: rgba(6, 20, 46, 0.48);
+  }
+  .config-drawer {
+    transition: transform .28s ease;
+  }
+  .config-drawer.closed {
+    transform: translateX(100%);
+  }
+</style>
 
-<!-- ── Hero ──────────────────────────────────────────────────────────────── -->
-<section class="bg-white border-b border-surface-border">
-  <div class="max-w-3xl mx-auto px-5 pt-14 pb-10 text-center">
-    <div class="inline-flex items-center gap-2 bg-brand-light text-brand text-xs font-semibold px-3.5 py-1.5 rounded-full mb-6">
-      <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-        <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
-      </svg>
-      Powered by Exa Semantic Search
+<section class="max-w-6xl mx-auto px-5">
+  <div class="search-shell">
+    <div id="heroCopy" class="hero-copy text-center max-w-3xl mb-10">
+      <div class="inline-flex items-center gap-2 bg-brand-light text-brand text-xs font-semibold px-3.5 py-1.5 rounded-full mb-6">
+        Exa semantic retrieval for procurement intelligence
+      </div>
+      <h1 class="font-display text-[3rem] leading-[1.04] tracking-[-0.02em] text-ink mb-4">
+        ExaGov
+      </h1>
+      <p class="text-ink-muted text-lg leading-relaxed">
+        Search federal and state procurement sources in one workflow, with configurable domains,
+        business-type targeting, and transparent query composition.
+      </p>
     </div>
 
-    <h1 class="text-[2.625rem] font-bold leading-[1.1] tracking-[-0.03em] text-ink mb-4">
-      Federal Procurement Intelligence
-    </h1>
-    <p class="text-ink-muted text-lg leading-relaxed max-w-xl mx-auto mb-10">
-      Semantic RFP discovery across SAM.gov, USASpending.gov, and procurement news —
-      built for growth-stage contractors who can't justify $15K/year for GovWin.
-    </p>
-
-    <!-- Search -->
-    <div class="relative max-w-2xl mx-auto">
-      <div class="flex items-center bg-white rounded-2xl shadow-search overflow-hidden transition-shadow focus-within:shadow-search-focus">
-        <div class="pl-4 pr-2 text-slate-400 flex-shrink-0">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-          </svg>
-        </div>
-        <input
-          id="queryInput"
-          type="text"
-          placeholder='Try "HHS cybersecurity" or "Army logistics"'
-          class="flex-1 px-3 py-4 text-[15px] text-ink placeholder-slate-400 bg-transparent border-none outline-none"
-          autocomplete="off"
-        />
+    <div class="search-panel">
+      <div class="flex justify-end mb-3">
         <button
-          id="searchBtn"
-          onclick="runSearch()"
-          class="m-1.5 bg-brand hover:bg-brand-dark text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all active:scale-95 flex-shrink-0"
+          id="configBtn"
+          onclick="openConfigDrawer()"
+          class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-surface-border text-ink-muted hover:text-ink hover:border-brand transition-colors text-sm font-semibold bg-white"
         >
-          Search
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317a1 1 0 011.35-.936l.793.353a1 1 0 00.798 0l.793-.353a1 1 0 011.35.936l.109.865a1 1 0 00.57.767l.784.392a1 1 0 01.454 1.347l-.385.77a1 1 0 000 .894l.385.77a1 1 0 01-.454 1.347l-.784.392a1 1 0 00-.57.767l-.109.865a1 1 0 01-1.35.936l-.793-.353a1 1 0 00-.798 0l-.793.353a1 1 0 01-1.35-.936l-.109-.865a1 1 0 00-.57-.767l-.784-.392a1 1 0 01-.454-1.347l.385-.77a1 1 0 000-.894l-.385-.77a1 1 0 01.454-1.347l.784-.392a1 1 0 00.57-.767l.109-.865z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 9a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          Configure
         </button>
       </div>
-    </div>
+      <div class="search-wrap rounded-2xl shadow-search overflow-hidden focus-within:shadow-search-focus">
+        <div class="flex items-center gap-2 p-2">
+          <div class="flex items-center flex-1">
+            <div class="pl-3 pr-2 text-brand">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+            </div>
+            <input
+              id="queryInput"
+              type="text"
+              placeholder='Try "VA health IT modernization"'
+              class="flex-1 px-3 py-4 text-[16px] font-medium text-ink placeholder-slate-400 bg-transparent border-none outline-none"
+              autocomplete="off"
+            />
+          </div>
+          <button
+            id="searchBtn"
+            onclick="runSearch()"
+            class="bg-brand hover:bg-brand-dark text-white text-sm font-semibold px-6 py-3 rounded-xl transition-all active:scale-95"
+          >
+            Search
+          </button>
+          <button
+            id="seeQueryBtn"
+            onclick="openQueryModal()"
+            class="hidden bg-white border border-surface-border hover:border-brand text-ink text-sm font-semibold px-4 py-3 rounded-xl transition-all"
+          >
+            See Query
+          </button>
+        </div>
+      </div>
 
-    <!-- Example chips -->
-    <div class="flex flex-wrap items-center justify-center gap-2 mt-5">
-      <span class="text-xs text-slate-400 font-medium">Quick search:</span>
-      {% for q in [
-        "HHS cybersecurity",
-        "Army logistics",
-        "DOE clean energy",
-        "DoD AI software",
-        "GSA cloud services",
-        "Navy shipbuilding",
-        "VA health IT",
-      ] %}
-      <button onclick="setQuery('{{ q }}')"
-        class="text-xs text-ink-muted border border-surface-border bg-white hover:border-brand hover:text-brand px-3 py-1.5 rounded-full transition-all">
-        {{ q }}
-      </button>
-      {% endfor %}
+      <div class="flex flex-wrap items-center justify-center gap-2 mt-5">
+        <span class="text-xs text-ink-subtle">Examples:</span>
+        {% for q in [
+          "HHS cybersecurity zero trust",
+          "Navy logistics sustainment",
+          "state transportation infrastructure consulting",
+          "DoD AI software modernization",
+          "healthcare analytics contract vehicle"
+        ] %}
+        <button
+          onclick="setQuery('{{ q }}')"
+          class="text-xs text-ink-muted border border-surface-border bg-white hover:border-brand hover:text-brand px-3 py-1.5 rounded-full transition-all"
+        >
+          {{ q }}
+        </button>
+        {% endfor %}
+      </div>
     </div>
   </div>
+
+  <section id="resultsStage" class="hidden pb-12">
+    <div id="results"></div>
+  </section>
 </section>
 
-<!-- ── Value props strip ──────────────────────────────────────────────────── -->
-<section class="bg-white border-b border-surface-border">
-  <div class="max-w-5xl mx-auto px-5 py-5 grid grid-cols-3 gap-6 text-center text-xs text-ink-muted">
-    <div class="flex items-center justify-center gap-2">
-      <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      <span>SAM.gov &amp; USASpending.gov</span>
+<div id="drawerBackdrop" class="query-overlay fixed inset-0 z-40 hidden" onclick="closeConfigDrawer()"></div>
+<aside id="configDrawer" class="config-drawer closed fixed top-0 right-0 h-full w-full max-w-lg bg-white border-l border-surface-border z-50 shadow-card-hover overflow-y-auto">
+  <div class="sticky top-0 bg-white border-b border-surface-border px-5 py-4 flex items-center justify-between">
+    <div>
+      <div class="text-sm font-semibold text-ink">Search configuration</div>
+      <div class="text-xs text-ink-subtle">Choose sources and business focus.</div>
     </div>
-    <div class="flex items-center justify-center gap-2">
-      <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-      <span>Semantic — not keyword-only</span>
-    </div>
-    <div class="flex items-center justify-center gap-2">
-      <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      <span>$200/mo vs $15K/yr for GovWin</span>
+    <button onclick="closeConfigDrawer()" class="text-ink-subtle hover:text-ink text-sm">Close</button>
+  </div>
+
+  <div class="px-5 py-5 space-y-6">
+    <section>
+      <h3 class="text-sm font-semibold text-ink mb-2">Federal procurement sites</h3>
+      <div id="federalSites" class="space-y-2"></div>
+    </section>
+
+    <section>
+      <h3 class="text-sm font-semibold text-ink mb-2">State procurement sites</h3>
+      <div id="stateSites" class="space-y-2"></div>
+    </section>
+
+    <section>
+      <h3 class="text-sm font-semibold text-ink mb-2">Business type</h3>
+      <div id="businessTypes" class="space-y-2"></div>
+    </section>
+
+    <section>
+      <h3 class="text-sm font-semibold text-ink mb-2">Additional queries (one per line)</h3>
+      <textarea
+        id="additionalQueries"
+        rows="4"
+        placeholder="e.g. set-aside small business&#10;e.g. recompete window"
+        class="w-full px-3 py-2.5 rounded-xl border border-surface-border text-sm text-ink placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-brand/30"
+      ></textarea>
+    </section>
+
+    <button
+      onclick="closeConfigDrawer()"
+      class="w-full bg-brand hover:bg-brand-dark text-white text-sm font-semibold rounded-xl py-2.5"
+    >
+      Apply configuration
+    </button>
+  </div>
+</aside>
+
+<div id="queryModal" class="hidden fixed inset-0 z-[60]">
+  <div class="query-overlay absolute inset-0" onclick="closeQueryModal()"></div>
+  <div class="relative max-w-2xl mx-auto mt-14 px-5">
+    <div class="bg-white rounded-2xl shadow-card-hover border border-surface-border overflow-hidden">
+      <div class="px-5 py-4 border-b border-surface-border flex items-center justify-between">
+        <div>
+          <div class="text-sm font-semibold text-ink">See Query</div>
+          <div class="text-xs text-ink-subtle">Current request content sent to Exa.</div>
+        </div>
+        <button onclick="closeQueryModal()" class="text-sm text-ink-subtle hover:text-ink">Close</button>
+      </div>
+      <pre id="queryDump" class="text-xs bg-slate-950 text-slate-100 p-5 overflow-auto max-h-[70vh]"></pre>
     </div>
   </div>
-</section>
+</div>
 
-<!-- ── Results area ───────────────────────────────────────────────────────── -->
-<section class="max-w-3xl mx-auto px-5 py-10">
-  <div id="results"></div>
-</section>
-
-<!-- ── JS ─────────────────────────────────────────────────────────────────── -->
 <script>
-/* ── State ── */
-let allResults = [];
-let activeTab = 'all';
+const FEDERAL_SITES = {{ federal_sites | tojson }};
+const STATE_SITES = {{ state_sites | tojson }};
+const BUSINESS_TYPES = {{ business_types | tojson }};
 
-/* ── Entry points ── */
+let allResults = [];
+let activeTab = "rfp";
+let lastSearchContext = {};
+
 function setQuery(q) {
-  document.getElementById('queryInput').value = q;
+  document.getElementById("queryInput").value = q;
   runSearch();
 }
 
+function openConfigDrawer() {
+  document.getElementById("drawerBackdrop").classList.remove("hidden");
+  document.getElementById("configDrawer").classList.remove("closed");
+}
+
+function closeConfigDrawer() {
+  document.getElementById("drawerBackdrop").classList.add("hidden");
+  document.getElementById("configDrawer").classList.add("closed");
+}
+
+function openQueryModal() {
+  const dump = {
+    query: lastSearchContext.query || document.getElementById("queryInput").value.trim(),
+    include_domains: lastSearchContext.include_domains || getSelectedDomains(),
+    business_types: lastSearchContext.business_types || getSelectedBusinessTypes(),
+    additional_queries: lastSearchContext.additional_queries || getAdditionalQueries(),
+  };
+  document.getElementById("queryDump").textContent = JSON.stringify(dump, null, 2);
+  document.getElementById("queryModal").classList.remove("hidden");
+}
+
+function closeQueryModal() {
+  document.getElementById("queryModal").classList.add("hidden");
+}
+
+function renderCheckboxList(targetId, items, name, checkedByDefault) {
+  const target = document.getElementById(targetId);
+  target.innerHTML = items.map((item) => `
+    <label class="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-slate-50">
+      <input type="checkbox" class="${name}" value="${escHtml(item)}" ${checkedByDefault ? "checked" : ""}>
+      <span class="text-xs text-ink-muted">${escHtml(item)}</span>
+    </label>
+  `).join("");
+}
+
+function renderBusinessTypes() {
+  const target = document.getElementById("businessTypes");
+  target.innerHTML = BUSINESS_TYPES.map((item) => `
+    <label class="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-slate-50">
+      <input type="checkbox" class="business-type" value="${escHtml(item)}">
+      <span class="text-xs text-ink-muted">${escHtml(item)}</span>
+    </label>
+  `).join("");
+}
+
+function getSelectedDomains() {
+  const federal = Array.from(document.querySelectorAll(".federal-site:checked")).map((el) => el.value);
+  const state = Array.from(document.querySelectorAll(".state-site:checked")).map((el) => el.value);
+  const merged = [...federal, ...state];
+  return merged.length ? merged : [...FEDERAL_SITES];
+}
+
+function getSelectedBusinessTypes() {
+  return Array.from(document.querySelectorAll(".business-type:checked")).map((el) => el.value);
+}
+
+function getAdditionalQueries() {
+  const text = document.getElementById("additionalQueries").value.trim();
+  return text ? text.split("\n").map((line) => line.trim()).filter(Boolean) : [];
+}
+
 async function runSearch() {
-  const query = document.getElementById('queryInput').value.trim();
+  const query = document.getElementById("queryInput").value.trim();
   if (!query) return;
 
-  const btn = document.getElementById('searchBtn');
-  btn.disabled = true;
-  btn.textContent = 'Searching…';
-  allResults = [];
-  activeTab = 'all';
+  document.body.classList.add("has-searched");
+  document.getElementById("resultsStage").classList.remove("hidden");
+  document.getElementById("seeQueryBtn").classList.remove("hidden");
 
+  const payload = {
+    query,
+    selected_domains: getSelectedDomains(),
+    business_types: getSelectedBusinessTypes(),
+    additional_queries: getAdditionalQueries(),
+  };
+
+  const btn = document.getElementById("searchBtn");
+  btn.disabled = true;
+  btn.textContent = "Searching...";
+  allResults = [];
+  activeTab = "rfp";
   showSkeleton();
 
   try {
-    const resp = await fetch('/api/search', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query }),
+    const resp = await fetch("/api/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
     const data = await resp.json();
+    lastSearchContext = data.search_context || payload;
 
-    if (data.error) { showError(data.error); return; }
-    if (!data.results?.length) { showEmpty(); return; }
+    if (data.error) {
+      showError(data.error);
+      return;
+    }
+    if (!data.results?.length) {
+      showEmpty();
+      return;
+    }
 
     allResults = data.results;
     renderAll();
-
-  } catch (e) {
-    showError('Network error — ' + e.message);
+  } catch (err) {
+    showError("Network error: " + err.message);
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Search';
+    btn.textContent = "Search";
   }
 }
 
-/* ── Render ── */
 function renderAll() {
   const counts = {
-    all:       allResults.length,
-    rfp:       allResults.filter(r => r.tag_class === 'rfp').length,
-    incumbent: allResults.filter(r => r.tag_class === 'incumbent').length,
-    news:      allResults.filter(r => r.tag_class === 'news').length,
+    all: allResults.length,
+    rfp: allResults.filter((r) => r.tag_class === "rfp").length,
+    incumbent: allResults.filter((r) => r.tag_class === "incumbent").length,
+    news: allResults.filter((r) => r.tag_class === "news").length,
   };
 
-  const container = document.getElementById('results');
+  const container = document.getElementById("results");
   container.innerHTML = buildTabBar(counts) + '<div id="cardGrid" class="space-y-3 mt-5"></div>';
-
   renderCards(activeTab);
   attachTabListeners();
 }
 
 function buildTabBar(counts) {
   const tabs = [
-    { key: 'all',       label: 'All',            n: counts.all       },
-    { key: 'rfp',       label: 'New RFP',         n: counts.rfp       },
-    { key: 'incumbent', label: 'Incumbent Intel',  n: counts.incumbent },
-    { key: 'news',      label: 'Agency News',      n: counts.news      },
+    { key: "rfp", label: "New RFP", n: counts.rfp },
+    { key: "incumbent", label: "Incumbent Intel", n: counts.incumbent },
+    { key: "news", label: "Agency News", n: counts.news },
+    { key: "all", label: "All", n: counts.all },
   ];
 
-  const pills = tabs.map(t => {
+  const pills = tabs.map((t) => {
     const isActive = t.key === activeTab;
-    const badgeBg = isActive ? 'bg-slate-100 text-ink-muted' : 'bg-white/60 text-slate-400';
     return `
-      <button data-tab="${t.key}"
-        class="tab-btn ${isActive ? 'active' : ''} flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg">
+      <button data-tab="${t.key}" class="tab-btn ${isActive ? "active" : ""} flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg">
         ${escHtml(t.label)}
-        <span class="text-xs px-1.5 py-0.5 rounded-full ${badgeBg}">${t.n}</span>
-      </button>`;
-  }).join('');
+        ${typeof t.n === "number" ? `<span class="text-xs px-1.5 py-0.5 rounded-full ${isActive ? "bg-slate-100 text-ink-muted" : "bg-white/60 text-slate-400"}">${t.n}</span>` : ""}
+      </button>
+    `;
+  }).join("");
 
-  const countLine = `<div class="text-xs text-ink-subtle mb-4">
-    ${counts.all} result${counts.all !== 1 ? 's' : ''} from SAM.gov, USASpending.gov &amp; procurement news
-  </div>`;
-
-  return countLine + `<div class="flex items-center gap-1 bg-slate-100 rounded-xl p-1 w-full overflow-x-auto">${pills}</div>`;
+  const domainCount = (lastSearchContext.include_domains || []).length;
+  return `
+    <div class="text-xs text-ink-subtle mb-4">
+      ${counts.all} result${counts.all !== 1 ? "s" : ""} across ${domainCount || 0} selected sources
+    </div>
+    <div class="flex items-center gap-1 bg-slate-100 rounded-xl p-1 w-full overflow-x-auto">${pills}</div>
+  `;
 }
 
 function attachTabListeners() {
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      activeTab = btn.dataset.tab;
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+  document.querySelectorAll(".tab-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const key = btn.dataset.tab;
+      activeTab = key;
+      document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
       renderCards(activeTab);
     });
   });
 }
 
 function renderCards(tabKey) {
-  const filtered = tabKey === 'all' ? allResults : allResults.filter(r => r.tag_class === tabKey);
-  const grid = document.getElementById('cardGrid');
+  const filtered = tabKey === "all" ? allResults : allResults.filter((r) => r.tag_class === tabKey);
+  const grid = document.getElementById("cardGrid");
 
   if (!filtered.length) {
     grid.innerHTML = `
       <div class="text-center py-12 text-ink-subtle text-sm">
         No results in this category.
-        <button onclick="document.querySelector('[data-tab=all]').click()"
-          class="ml-1 text-brand hover:underline">View all</button>
-      </div>`;
+        <button onclick="document.querySelector('[data-tab=all]').click()" class="ml-1 text-brand hover:underline">View all</button>
+      </div>
+    `;
     return;
   }
 
-  const accentMap = { rfp: 'accent-rfp', incumbent: 'accent-incumbent', news: 'accent-news' };
-  const tagMap    = { rfp: 'tag-rfp',    incumbent: 'tag-incumbent',    news: 'tag-news'    };
+  const accentMap = { rfp: "accent-rfp", incumbent: "accent-incumbent", news: "accent-news" };
+  const tagMap = { rfp: "tag-rfp", incumbent: "tag-incumbent", news: "tag-news" };
 
-  grid.innerHTML = filtered.map((r, i) => {
-    const ac = accentMap[r.tag_class] || 'accent-news';
-    const tc = tagMap[r.tag_class]    || 'tag-news';
-    return `
-      <article class="result-card relative bg-white rounded-2xl shadow-card hover:shadow-card-hover overflow-hidden"
-               style="animation-delay:${i * .05}s">
-        <!-- accent bar -->
-        <div class="absolute left-0 inset-y-0 w-[3px] ${ac}"></div>
-        <div class="p-6 pl-7">
-          <!-- top row -->
-          <div class="flex items-start justify-between gap-3 mb-3">
-            <span class="${tc} text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0">${escHtml(r.tag)}</span>
-            ${r.date ? `<span class="text-xs text-ink-subtle flex-shrink-0">${escHtml(r.date)}</span>` : ''}
-          </div>
-          <!-- title -->
-          <h3 class="font-semibold text-ink text-[15px] leading-snug mb-2 tracking-[-0.01em]">${escHtml(r.title)}</h3>
-          <!-- summary -->
-          <p class="text-sm text-ink-muted leading-relaxed mb-3">${escHtml(r.summary)}</p>
-          <!-- why -->
-          <div class="why-box rounded-lg px-4 py-2.5 mb-4 text-[13px] text-slate-600 leading-relaxed">
-            <span class="font-semibold text-slate-700">Why this matters — </span>${escHtml(r.why)}
-          </div>
-          <!-- footer -->
-          <div class="flex items-center justify-between text-xs">
-            <span class="text-ink-subtle font-mono">${escHtml(r.domain)}</span>
-            <a href="${escHtml(r.url)}" target="_blank" rel="noopener noreferrer"
-               class="flex items-center gap-1 text-brand font-semibold hover:underline">
-              View source
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-              </svg>
-            </a>
-          </div>
+  grid.innerHTML = filtered.map((r, i) => `
+    <article class="result-card relative bg-white rounded-2xl shadow-card hover:shadow-card-hover overflow-hidden" style="animation-delay:${i * .05}s">
+      <div class="absolute left-0 inset-y-0 w-[3px] ${accentMap[r.tag_class] || "accent-news"}"></div>
+      <div class="p-6 pl-7">
+        <div class="flex items-start justify-between gap-3 mb-3">
+          <span class="${tagMap[r.tag_class] || "tag-news"} text-xs font-semibold px-2.5 py-1 rounded-full">${escHtml(r.tag)}</span>
+          ${r.date ? `<span class="text-xs text-ink-subtle">${escHtml(r.date)}</span>` : ""}
         </div>
-      </article>`;
-  }).join('');
+        <h3 class="font-semibold text-ink text-[15px] leading-snug mb-2 tracking-[-0.01em]">${escHtml(r.title)}</h3>
+        <p class="text-sm text-ink-muted leading-relaxed mb-3">${escHtml(r.summary)}</p>
+        <div class="why-box rounded-lg px-4 py-2.5 mb-4 text-[13px] text-slate-600 leading-relaxed">
+          <span class="font-semibold text-slate-700">Why this matters: </span>${escHtml(r.why)}
+        </div>
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-ink-subtle font-mono">${escHtml(r.domain)}</span>
+          <a href="${escHtml(r.url)}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1 text-brand font-semibold hover:underline">
+            View source
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </article>
+  `).join("");
 }
 
-/* ── States ── */
 function showSkeleton() {
-  const s = () => `
+  const card = `
     <div class="bg-white rounded-2xl shadow-card overflow-hidden">
       <div class="p-6 pl-7 space-y-3">
-        <div class="flex justify-between"><div class="skeleton h-5 w-20"></div><div class="skeleton h-4 w-24"></div></div>
+        <div class="flex justify-between"><div class="skeleton h-5 w-24"></div><div class="skeleton h-4 w-24"></div></div>
         <div class="skeleton h-5 w-3/4"></div>
         <div class="skeleton h-4 w-full"></div>
         <div class="skeleton h-4 w-5/6"></div>
         <div class="skeleton h-12 w-full rounded-lg"></div>
-        <div class="flex justify-between"><div class="skeleton h-3 w-24"></div><div class="skeleton h-3 w-20"></div></div>
       </div>
-    </div>`;
-  document.getElementById('results').innerHTML = `
-    <div class="text-xs text-ink-subtle mb-4">Searching procurement databases…</div>
-    <div class="space-y-3">${s()}${s()}${s()}</div>`;
+    </div>
+  `;
+  document.getElementById("results").innerHTML = `
+    <div class="text-xs text-ink-subtle mb-4">Searching procurement sources...</div>
+    <div class="space-y-3">${card}${card}${card}</div>
+  `;
 }
 
 function showError(msg) {
-  document.getElementById('results').innerHTML = `
+  document.getElementById("results").innerHTML = `
     <div class="bg-red-50 border border-red-200 rounded-2xl p-6 text-sm text-red-700">
       <div class="font-semibold mb-1">Search failed</div>
       <div>${escHtml(msg)}</div>
-    </div>`;
+    </div>
+  `;
 }
 
 function showEmpty() {
-  document.getElementById('results').innerHTML = `
+  document.getElementById("results").innerHTML = `
     <div class="text-center py-16">
-      <div class="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-        <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-        </svg>
-      </div>
       <div class="text-ink font-semibold mb-1">No results found</div>
-      <div class="text-sm text-ink-muted">Try a broader search term, a different agency, or a contract category.</div>
-    </div>`;
+      <div class="text-sm text-ink-muted">Try broader terms or enable more state and federal sites in configuration.</div>
+    </div>
+  `;
 }
 
-/* ── Utility ── */
 function escHtml(s) {
-  return String(s ?? '')
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
-/* ── Keyboard ── */
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('queryInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter') runSearch();
+document.addEventListener("DOMContentLoaded", () => {
+  renderCheckboxList("federalSites", FEDERAL_SITES, "federal-site", true);
+  renderCheckboxList("stateSites", STATE_SITES, "state-site", false);
+  renderBusinessTypes();
+  document.getElementById("queryInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") runSearch();
   });
 });
 </script>

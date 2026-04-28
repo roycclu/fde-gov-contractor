@@ -454,22 +454,29 @@ function extractBdIntel(result) {
 }
 
 function isGenericSamResult(result) {
-  const rawUrl = String(result.url || "").trim().toLowerCase();
-  const normalized = rawUrl
-    .replace(/^https?:\/\//, "")
-    .replace(/^www\./, "")
-    .replace(/\/+$/, "");
-  const title = String(result.title || "").toLowerCase();
+  const title = String(result.title || "");
+  const titleLc = title.toLowerCase();
+  const summaryLc = String(result.summary || "").toLowerCase();
 
-  if (normalized === "sam.gov") return true;
-  const genericTitle = (
-    title.includes("contract opportunities | sam.gov") ||
-    title.includes("find contract opportunities")
+  // 1) Title contains SAM.gov
+  const titleContainsSam = titleLc.includes("sam.gov");
+
+  // 2) Title has no specific program / contract / agency signal
+  const hasSpecificSignal = (
+    /\b(rfp|rfi|idiq|bpa|boa|sources sought|solicitation|task order|naics)\b/i.test(title) ||
+    /\b(dod|va|hhs|nih|nasa|army|navy|air force|gsa|doe|dhs|epa|usda|faa|cms|fema|irs|ssa)\b/i.test(title) ||
+    /\b[a-z]{2,}\d{2,}[a-z0-9-]*\b/i.test(title)
   );
-  if (genericTitle && !(/[a-z0-9]{4,}/i.test(String(result.summary || "")))) {
-    return true;
-  }
-  return false;
+  const noSpecificTitleSignal = !hasSpecificSignal;
+
+  // 3) Summary has generic SAM.gov UI content
+  const summaryHasGenericUiText = (
+    summaryLc.includes("you have 2 new alerts") ||
+    summaryLc.includes("scheduled sam maintenance") ||
+    summaryLc.includes("skip to main content")
+  );
+
+  return titleContainsSam && noSpecificTitleSignal && summaryHasGenericUiText;
 }
 
 async function runSearch() {

@@ -14,7 +14,15 @@
   }
   body.has-searched .search-shell {
     min-height: auto;
-    padding: 1.25rem 0 .75rem;
+    padding: 0.625rem 1.25rem;
+    position: sticky;
+    top: 3.5rem;
+    z-index: 20;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.97);
+    border-bottom: 1px solid #e5ecf5;
+    box-shadow: 0 2px 12px rgba(9, 24, 55, 0.08);
+    backdrop-filter: blur(8px);
   }
   .hero-copy {
     opacity: 1;
@@ -36,19 +44,46 @@
     transition: max-width .3s ease;
   }
   body.has-searched .search-panel {
-    max-width: 78rem;
+    max-width: 76rem;
   }
   .search-wrap {
     border: 1px solid #cfd9ea;
     background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
   }
+  #quickSelect {
+    max-height: 220px;
+    overflow: hidden;
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity .25s ease, max-height .32s ease, transform .25s ease, margin .32s ease;
+  }
+  body.has-searched #quickSelect {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-6px);
+    pointer-events: none;
+    margin-top: 0 !important;
+  }
+  .qs-pill {
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+  }
+  .qs-pill.active {
+    background-color: #EAF0FA;
+    border-color: #0A2A66;
+    color: #0A2A66;
+    font-weight: 600;
+  }
+  body.has-searched #queryInput {
+    padding-top: .5rem;
+    padding-bottom: .5rem;
+  }
   .query-overlay {
     background: rgba(6, 20, 46, 0.48);
   }
-  .config-drawer {
+  .config-drawer, .source-panel {
     transition: transform .28s ease;
   }
-  .config-drawer.closed {
+  .config-drawer.closed, .source-panel.closed {
     transform: translateX(100%);
   }
 </style>
@@ -59,9 +94,7 @@
       <div class="inline-flex items-center gap-2 bg-brand-light text-brand text-xs font-semibold px-3.5 py-1.5 rounded-full mb-6">
         Exa semantic retrieval for procurement intelligence
       </div>
-      <h1 class="font-display text-[3rem] leading-[1.04] tracking-[-0.02em] text-ink mb-4">
-        ExaGov
-      </h1>
+      <h1 class="font-display text-[3rem] leading-[1.04] tracking-[-0.02em] text-ink mb-4">ExaGov</h1>
       <p class="text-ink-muted text-lg leading-relaxed">
         Search federal and state procurement sources in one workflow, with configurable domains,
         business-type targeting, and transparent query composition.
@@ -69,68 +102,63 @@
     </div>
 
     <div class="search-panel">
-      <div class="flex justify-end mb-3">
-        <button
-          id="configBtn"
-          onclick="openConfigDrawer()"
-          class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-surface-border text-ink-muted hover:text-ink hover:border-brand transition-colors text-sm font-semibold bg-white"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317a1 1 0 011.35-.936l.793.353a1 1 0 00.798 0l.793-.353a1 1 0 011.35.936l.109.865a1 1 0 00.57.767l.784.392a1 1 0 01.454 1.347l-.385.77a1 1 0 000 .894l.385.77a1 1 0 01-.454 1.347l-.784.392a1 1 0 00-.57.767l-.109.865a1 1 0 01-1.35.936l-.793-.353a1 1 0 00-.798 0l-.793.353a1 1 0 01-1.35-.936l-.109-.865a1 1 0 00-.57-.767l-.784-.392a1 1 0 01-.454-1.347l.385-.77a1 1 0 000-.894l-.385-.77a1 1 0 01.454-1.347l.784-.392a1 1 0 00.57-.767l.109-.865z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 9a3 3 0 11-6 0 3 3 0 016 0z"/>
-          </svg>
-          Configure
-        </button>
-      </div>
-      <div class="search-wrap rounded-2xl shadow-search overflow-hidden focus-within:shadow-search-focus">
-        <div class="flex items-center gap-2 p-2">
-          <div class="flex items-center flex-1">
-            <div class="pl-3 pr-2 text-brand">
+      <div class="flex items-center gap-2">
+        <div class="search-wrap flex-1 rounded-2xl shadow-search overflow-hidden focus-within:shadow-search-focus">
+          <div class="flex items-center gap-1.5 p-2">
+            <div class="pl-2 pr-1 text-brand flex-shrink-0">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
               </svg>
             </div>
-            <input
-              id="queryInput"
-              type="text"
-              placeholder='Try "VA health IT modernization"'
-              class="flex-1 px-3 py-4 text-[16px] font-medium text-ink placeholder-slate-400 bg-transparent border-none outline-none"
-              autocomplete="off"
-            />
+            <input id="queryInput" type="text" placeholder='Try "VA health IT modernization"'
+              class="flex-1 px-2 py-4 text-[16px] font-medium text-ink placeholder-slate-400 bg-transparent border-none outline-none" autocomplete="off"/>
+            <button id="searchBtn" onclick="runSearch()"
+              class="bg-brand hover:bg-brand-dark text-white text-sm font-semibold px-6 py-3 rounded-xl transition-all active:scale-95 flex-shrink-0">
+              Search
+            </button>
+            <button id="seeQueryBtn" onclick="openQueryModal()"
+              class="hidden text-ink-subtle hover:text-ink text-xs font-medium px-3 py-2.5 rounded-xl border border-surface-border hover:border-brand transition-all flex-shrink-0">
+              See Query
+            </button>
           </div>
-          <button
-            id="searchBtn"
-            onclick="runSearch()"
-            class="bg-brand hover:bg-brand-dark text-white text-sm font-semibold px-6 py-3 rounded-xl transition-all active:scale-95"
-          >
-            Search
-          </button>
-          <button
-            id="seeQueryBtn"
-            onclick="openQueryModal()"
-            class="hidden bg-white border border-surface-border hover:border-brand text-ink text-sm font-semibold px-4 py-3 rounded-xl transition-all"
-          >
-            See Query
-          </button>
         </div>
+
+        <button id="configBtn" onclick="openConfigDrawer()" title="Configure search sources"
+          class="flex-shrink-0 flex items-center justify-center w-11 h-11 rounded-xl border border-surface-border bg-white text-ink-muted hover:text-brand hover:border-brand transition-colors shadow-sm">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317a1 1 0 011.35-.936l.793.353a1 1 0 00.798 0l.793-.353a1 1 0 011.35.936l.109.865a1 1 0 00.57.767l.784.392a1 1 0 01.454 1.347l-.385.77a1 1 0 000 .894l.385.77a1 1 0 01-.454 1.347l-.784.392a1 1 0 00-.57.767l-.109.865a1 1 0 01-1.35.936l-.793-.353a1 1 0 00-.798 0l-.793.353a1 1 0 01-1.35-.936l-.109-.865a1 1 0 00-.57-.767l-.784-.392a1 1 0 01-.454-1.347l.385-.77a1 1 0 000-.894l-.385-.77a1 1 0 01.454-1.347l.784-.392a1 1 0 00.57-.767l.109-.865z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 9a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+        </button>
       </div>
 
-      <div class="flex flex-wrap items-center justify-center gap-2 mt-5">
-        <span class="text-xs text-ink-subtle">Examples:</span>
-        {% for q in [
-          "HHS cybersecurity zero trust",
-          "Navy logistics sustainment",
-          "state transportation infrastructure consulting",
-          "DoD AI software modernization",
-          "healthcare analytics contract vehicle"
-        ] %}
-        <button
-          onclick="setQuery('{{ q }}')"
-          class="text-xs text-ink-muted border border-surface-border bg-white hover:border-brand hover:text-brand px-3 py-1.5 rounded-full transition-all"
-        >
-          {{ q }}
-        </button>
-        {% endfor %}
+      <div id="quickSelect" class="mt-5 space-y-2.5">
+        <div class="flex items-center flex-wrap gap-2">
+          <span class="text-[11px] font-semibold text-ink-subtle tracking-[0.14em] uppercase">Popular Search</span>
+          <button onclick="setQuery('DoD cyber operations services')" class="qs-pill text-xs border border-surface-border bg-white px-3 py-1.5 rounded-full text-ink-muted hover:border-brand hover:text-brand">DoD cyber operations services</button>
+          <button onclick="setQuery('VA healthcare analytics modernization')" class="qs-pill text-xs border border-surface-border bg-white px-3 py-1.5 rounded-full text-ink-muted hover:border-brand hover:text-brand">VA healthcare analytics modernization</button>
+          <button onclick="setQuery('Army logistics sustainment')" class="qs-pill text-xs border border-surface-border bg-white px-3 py-1.5 rounded-full text-ink-muted hover:border-brand hover:text-brand">Army logistics sustainment</button>
+          <button onclick="setQuery('state transportation infrastructure consulting')" class="qs-pill text-xs border border-surface-border bg-white px-3 py-1.5 rounded-full text-ink-muted hover:border-brand hover:text-brand">state transportation infrastructure consulting</button>
+        </div>
+
+        <div class="flex items-center flex-wrap gap-2">
+          <span class="text-xs text-ink-subtle">Business Types:</span>
+          {% for bt in business_types %}
+          <button onclick="toggleBusinessType({{ bt | tojson }})" data-bt="{{ bt }}"
+            class="qs-pill text-xs border border-surface-border bg-white px-3 py-1.5 rounded-full text-ink-muted hover:border-brand hover:text-brand">
+            {{ bt }}
+          </button>
+          {% endfor %}
+          <button onclick="openConfigDrawer()" class="text-xs text-brand font-semibold hover:underline ml-0.5">configure →</button>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-xs text-ink-subtle">Recency:</span>
+          <button onclick="toggleDateRange(null)" data-days="" class="qs-pill date-pill active text-xs border border-surface-border bg-white px-3 py-1.5 rounded-full text-ink-muted hover:border-brand hover:text-brand">Any time</button>
+          <button onclick="toggleDateRange('7')" data-days="7" class="qs-pill date-pill text-xs border border-surface-border bg-white px-3 py-1.5 rounded-full text-ink-muted hover:border-brand hover:text-brand">Last 7 days</button>
+          <button onclick="toggleDateRange('30')" data-days="30" class="qs-pill date-pill text-xs border border-surface-border bg-white px-3 py-1.5 rounded-full text-ink-muted hover:border-brand hover:text-brand">Last 30 days</button>
+          <button onclick="toggleDateRange('90')" data-days="90" class="qs-pill date-pill text-xs border border-surface-border bg-white px-3 py-1.5 rounded-full text-ink-muted hover:border-brand hover:text-brand">Last 90 days</button>
+        </div>
       </div>
     </div>
   </div>
@@ -145,43 +173,30 @@
   <div class="sticky top-0 bg-white border-b border-surface-border px-5 py-4 flex items-center justify-between">
     <div>
       <div class="text-sm font-semibold text-ink">Search configuration</div>
-      <div class="text-xs text-ink-subtle">Choose sources and business focus.</div>
+      <div class="text-xs text-ink-subtle">Choose sources and add custom query terms.</div>
     </div>
     <button onclick="closeConfigDrawer()" class="text-ink-subtle hover:text-ink text-sm">Close</button>
   </div>
-
   <div class="px-5 py-5 space-y-6">
     <section>
       <h3 class="text-sm font-semibold text-ink mb-2">Federal procurement sites</h3>
       <div id="federalSites" class="space-y-2"></div>
     </section>
-
     <section>
       <h3 class="text-sm font-semibold text-ink mb-2">State procurement sites</h3>
       <div id="stateSites" class="space-y-2"></div>
     </section>
-
     <section>
-      <h3 class="text-sm font-semibold text-ink mb-2">Business type</h3>
+      <h3 class="text-sm font-semibold text-ink mb-2">Business types</h3>
       <div id="businessTypes" class="space-y-2"></div>
     </section>
-
     <section>
-      <h3 class="text-sm font-semibold text-ink mb-2">Additional queries (one per line)</h3>
-      <textarea
-        id="additionalQueries"
-        rows="4"
-        placeholder="e.g. set-aside small business&#10;e.g. recompete window"
-        class="w-full px-3 py-2.5 rounded-xl border border-surface-border text-sm text-ink placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-brand/30"
-      ></textarea>
+      <h3 class="text-sm font-semibold text-ink mb-2">Additional queries <span class="font-normal text-ink-subtle">(one per line)</span></h3>
+      <p class="text-[11px] text-ink-subtle mb-2">Business type selections from the quick strip and this drawer are combined.</p>
+      <textarea id="additionalQueries" rows="4" placeholder="e.g. set-aside small business&#10;e.g. recompete window"
+        class="w-full px-3 py-2.5 rounded-xl border border-surface-border text-sm text-ink placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-brand/30"></textarea>
     </section>
-
-    <button
-      onclick="closeConfigDrawer()"
-      class="w-full bg-brand hover:bg-brand-dark text-white text-sm font-semibold rounded-xl py-2.5"
-    >
-      Apply configuration
-    </button>
+    <button onclick="closeConfigDrawer()" class="w-full bg-brand hover:bg-brand-dark text-white text-sm font-semibold rounded-xl py-2.5">Apply configuration</button>
   </div>
 </aside>
 
@@ -192,7 +207,7 @@
       <div class="px-5 py-4 border-b border-surface-border flex items-center justify-between">
         <div>
           <div class="text-sm font-semibold text-ink">See Query</div>
-          <div class="text-xs text-ink-subtle">Current request content sent to Exa.</div>
+          <div class="text-xs text-ink-subtle">Current request body sent to Exa.</div>
         </div>
         <button onclick="closeQueryModal()" class="text-sm text-ink-subtle hover:text-ink">Close</button>
       </div>
@@ -201,18 +216,105 @@
   </div>
 </div>
 
+<div id="sourceBackdrop" class="query-overlay fixed inset-0 z-[64] hidden" onclick="closeSourcePanel()"></div>
+<aside id="sourcePanel" class="source-panel closed fixed top-0 right-0 h-full w-full max-w-2xl bg-white border-l border-surface-border z-[65] shadow-card-hover overflow-y-auto">
+  <div class="sticky top-0 bg-white border-b border-surface-border px-5 py-4 flex items-center justify-between">
+    <div>
+      <div class="text-sm font-semibold text-ink">Source Preview</div>
+      <div id="sourceMeta" class="text-xs text-ink-subtle"></div>
+    </div>
+    <button onclick="closeSourcePanel()" class="text-ink-subtle hover:text-ink text-sm">Close</button>
+  </div>
+  <div class="px-5 py-5 space-y-4">
+    <h3 id="sourceTitle" class="text-lg font-semibold text-ink"></h3>
+    <p id="sourceSummary" class="text-sm text-ink-muted leading-relaxed"></p>
+    <section>
+      <div class="text-xs font-semibold text-ink-subtle uppercase tracking-wide mb-1.5">Highlights</div>
+      <div id="sourceHighlights" class="space-y-2 text-sm text-ink-muted"></div>
+    </section>
+    <section>
+      <div class="text-xs font-semibold text-ink-subtle uppercase tracking-wide mb-1.5">Content Excerpt</div>
+      <pre id="sourceExcerpt" class="whitespace-pre-wrap bg-slate-50 border border-surface-border rounded-xl p-4 text-xs text-slate-700"></pre>
+    </section>
+    <a id="sourceOpenLink" href="#" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:underline">
+      Open original source
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+      </svg>
+    </a>
+  </div>
+</aside>
+
 <script>
 const FEDERAL_SITES = {{ federal_sites | tojson }};
 const STATE_SITES = {{ state_sites | tojson }};
 const BUSINESS_TYPES = {{ business_types | tojson }};
+const BUSINESS_TYPE_HINTS = {{ business_type_hints | tojson }};
 
 let allResults = [];
 let activeTab = "rfp";
 let lastSearchContext = {};
+const selectedBusinessTypes = new Set();
+let selectedDateDays = null;
 
 function setQuery(q) {
   document.getElementById("queryInput").value = q;
   runSearch();
+}
+
+function toggleBusinessType(bt) {
+  if (selectedBusinessTypes.has(bt)) selectedBusinessTypes.delete(bt);
+  else selectedBusinessTypes.add(bt);
+  syncBusinessTypeUI();
+}
+
+function toggleDateRange(days) {
+  if (days === null) selectedDateDays = null;
+  else selectedDateDays = selectedDateDays === days ? null : days;
+  document.querySelectorAll(".date-pill").forEach((btn) => {
+    if (!selectedDateDays && btn.dataset.days === "") {
+      btn.classList.add("active");
+    } else {
+      btn.classList.toggle("active", btn.dataset.days === selectedDateDays);
+    }
+  });
+}
+
+function getSelectedDomains() {
+  const federal = Array.from(document.querySelectorAll(".federal-site:checked")).map((el) => el.value);
+  const state = Array.from(document.querySelectorAll(".state-site:checked")).map((el) => el.value);
+  const merged = [...federal, ...state];
+  return merged.length ? merged : [...FEDERAL_SITES];
+}
+
+function getSelectedBusinessTypes() {
+  return [...selectedBusinessTypes];
+}
+
+function getAdditionalQueries() {
+  const text = document.getElementById("additionalQueries").value.trim();
+  const manual = text ? text.split("\n").map((l) => l.trim()).filter(Boolean) : [];
+  const btHints = [];
+  for (const bt of selectedBusinessTypes) {
+    if (BUSINESS_TYPE_HINTS[bt]) btHints.push(...BUSINESS_TYPE_HINTS[bt]);
+  }
+  const seen = new Set();
+  const merged = [];
+  for (const q of [...manual, ...btHints]) {
+    if (!seen.has(q)) {
+      seen.add(q);
+      merged.push(q);
+    }
+  }
+  return merged;
+}
+
+function getStartPublishedDate() {
+  if (!selectedDateDays) return null;
+  const d = new Date();
+  d.setDate(d.getDate() - parseInt(selectedDateDays, 10));
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
 }
 
 function openConfigDrawer() {
@@ -231,7 +333,10 @@ function openQueryModal() {
     include_domains: lastSearchContext.include_domains || getSelectedDomains(),
     business_types: lastSearchContext.business_types || getSelectedBusinessTypes(),
     additional_queries: lastSearchContext.additional_queries || getAdditionalQueries(),
+    start_published_date: lastSearchContext.start_published_date || getStartPublishedDate(),
   };
+  if (!dump.start_published_date) delete dump.start_published_date;
+  if (!dump.additional_queries?.length) delete dump.additional_queries;
   document.getElementById("queryDump").textContent = JSON.stringify(dump, null, 2);
   document.getElementById("queryModal").classList.remove("hidden");
 }
@@ -240,40 +345,32 @@ function closeQueryModal() {
   document.getElementById("queryModal").classList.add("hidden");
 }
 
-function renderCheckboxList(targetId, items, name, checkedByDefault) {
-  const target = document.getElementById(targetId);
-  target.innerHTML = items.map((item) => `
-    <label class="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-slate-50">
-      <input type="checkbox" class="${name}" value="${escHtml(item)}" ${checkedByDefault ? "checked" : ""}>
-      <span class="text-xs text-ink-muted">${escHtml(item)}</span>
-    </label>
-  `).join("");
+function openSourcePanel(index) {
+  const item = allResults[index];
+  if (!item) return;
+  document.getElementById("sourceTitle").textContent = item.title || "Untitled";
+  document.getElementById("sourceMeta").textContent = [item.domain || "", item.date || ""].filter(Boolean).join(" · ");
+  document.getElementById("sourceSummary").textContent = item.summary || "No summary available.";
+  document.getElementById("sourceExcerpt").textContent = item.source_excerpt || "No additional content excerpt available.";
+  document.getElementById("sourceOpenLink").href = item.url || "#";
+  const highlights = (item.highlights || []).map((line) => `<div class="rounded-lg border border-surface-border bg-white px-3 py-2">${escHtml(line)}</div>`).join("");
+  document.getElementById("sourceHighlights").innerHTML = highlights || '<div class="text-xs text-ink-subtle">No highlights available.</div>';
+  document.getElementById("sourceBackdrop").classList.remove("hidden");
+  document.getElementById("sourcePanel").classList.remove("closed");
 }
 
-function renderBusinessTypes() {
-  const target = document.getElementById("businessTypes");
-  target.innerHTML = BUSINESS_TYPES.map((item) => `
-    <label class="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-slate-50">
-      <input type="checkbox" class="business-type" value="${escHtml(item)}">
-      <span class="text-xs text-ink-muted">${escHtml(item)}</span>
-    </label>
-  `).join("");
+function closeSourcePanel() {
+  document.getElementById("sourceBackdrop").classList.add("hidden");
+  document.getElementById("sourcePanel").classList.add("closed");
 }
 
-function getSelectedDomains() {
-  const federal = Array.from(document.querySelectorAll(".federal-site:checked")).map((el) => el.value);
-  const state = Array.from(document.querySelectorAll(".state-site:checked")).map((el) => el.value);
-  const merged = [...federal, ...state];
-  return merged.length ? merged : [...FEDERAL_SITES];
-}
-
-function getSelectedBusinessTypes() {
-  return Array.from(document.querySelectorAll(".business-type:checked")).map((el) => el.value);
-}
-
-function getAdditionalQueries() {
-  const text = document.getElementById("additionalQueries").value.trim();
-  return text ? text.split("\n").map((line) => line.trim()).filter(Boolean) : [];
+function syncBusinessTypeUI() {
+  document.querySelectorAll("[data-bt]").forEach((btn) => {
+    btn.classList.toggle("active", selectedBusinessTypes.has(btn.dataset.bt));
+  });
+  document.querySelectorAll(".business-type").forEach((cb) => {
+    cb.checked = selectedBusinessTypes.has(cb.value);
+  });
 }
 
 async function runSearch() {
@@ -284,11 +381,13 @@ async function runSearch() {
   document.getElementById("resultsStage").classList.remove("hidden");
   document.getElementById("seeQueryBtn").classList.remove("hidden");
 
+  const startDate = getStartPublishedDate();
   const payload = {
     query,
     selected_domains: getSelectedDomains(),
     business_types: getSelectedBusinessTypes(),
     additional_queries: getAdditionalQueries(),
+    ...(startDate ? { start_published_date: startDate } : {}),
   };
 
   const btn = document.getElementById("searchBtn");
@@ -306,7 +405,6 @@ async function runSearch() {
     });
     const data = await resp.json();
     lastSearchContext = data.search_context || payload;
-
     if (data.error) {
       showError(data.error);
       return;
@@ -315,7 +413,6 @@ async function runSearch() {
       showEmpty();
       return;
     }
-
     allResults = data.results;
     renderAll();
   } catch (err) {
@@ -333,7 +430,6 @@ function renderAll() {
     incumbent: allResults.filter((r) => r.tag_class === "incumbent").length,
     news: allResults.filter((r) => r.tag_class === "news").length,
   };
-
   const container = document.getElementById("results");
   container.innerHTML = buildTabBar(counts) + '<div id="cardGrid" class="space-y-3 mt-5"></div>';
   renderCards(activeTab);
@@ -347,31 +443,23 @@ function buildTabBar(counts) {
     { key: "news", label: "Agency News", n: counts.news },
     { key: "all", label: "All", n: counts.all },
   ];
-
   const pills = tabs.map((t) => {
     const isActive = t.key === activeTab;
-    return `
-      <button data-tab="${t.key}" class="tab-btn ${isActive ? "active" : ""} flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg">
-        ${escHtml(t.label)}
-        ${typeof t.n === "number" ? `<span class="text-xs px-1.5 py-0.5 rounded-full ${isActive ? "bg-slate-100 text-ink-muted" : "bg-white/60 text-slate-400"}">${t.n}</span>` : ""}
-      </button>
-    `;
+    return `<button data-tab="${t.key}" class="tab-btn ${isActive ? "active" : ""} flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg">
+      ${escHtml(t.label)}
+      <span class="text-xs px-1.5 py-0.5 rounded-full ${isActive ? "bg-slate-100 text-ink-muted" : "bg-white/60 text-slate-400"}">${t.n}</span>
+    </button>`;
   }).join("");
-
   const domainCount = (lastSearchContext.include_domains || []).length;
-  return `
-    <div class="text-xs text-ink-subtle mb-4">
-      ${counts.all} result${counts.all !== 1 ? "s" : ""} across ${domainCount || 0} selected sources
-    </div>
-    <div class="flex items-center gap-1 bg-slate-100 rounded-xl p-1 w-full overflow-x-auto">${pills}</div>
-  `;
+  const dateLabel = lastSearchContext.start_published_date ? ` · from ${lastSearchContext.start_published_date.slice(0, 10)}` : "";
+  return `<div class="text-xs text-ink-subtle mb-4">${counts.all} result${counts.all !== 1 ? "s" : ""} across ${domainCount || 0} selected sources${escHtml(dateLabel)}</div>
+    <div class="flex items-center gap-1 bg-slate-100 rounded-xl p-1 w-full overflow-x-auto">${pills}</div>`;
 }
 
 function attachTabListeners() {
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const key = btn.dataset.tab;
-      activeTab = key;
+      activeTab = btn.dataset.tab;
       document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       renderCards(activeTab);
@@ -382,20 +470,14 @@ function attachTabListeners() {
 function renderCards(tabKey) {
   const filtered = tabKey === "all" ? allResults : allResults.filter((r) => r.tag_class === tabKey);
   const grid = document.getElementById("cardGrid");
-
   if (!filtered.length) {
-    grid.innerHTML = `
-      <div class="text-center py-12 text-ink-subtle text-sm">
-        No results in this category.
-        <button onclick="document.querySelector('[data-tab=all]').click()" class="ml-1 text-brand hover:underline">View all</button>
-      </div>
-    `;
+    grid.innerHTML = `<div class="text-center py-12 text-ink-subtle text-sm">No results in this category.
+      <button onclick="document.querySelector('[data-tab=all]').click()" class="ml-1 text-brand hover:underline">View all</button>
+    </div>`;
     return;
   }
-
   const accentMap = { rfp: "accent-rfp", incumbent: "accent-incumbent", news: "accent-news" };
   const tagMap = { rfp: "tag-rfp", incumbent: "tag-incumbent", news: "tag-news" };
-
   grid.innerHTML = filtered.map((r, i) => `
     <article class="result-card relative bg-white rounded-2xl shadow-card hover:shadow-card-hover overflow-hidden" style="animation-delay:${i * .05}s">
       <div class="absolute left-0 inset-y-0 w-[3px] ${accentMap[r.tag_class] || "accent-news"}"></div>
@@ -411,66 +493,65 @@ function renderCards(tabKey) {
         </div>
         <div class="flex items-center justify-between text-xs">
           <span class="text-ink-subtle font-mono">${escHtml(r.domain)}</span>
-          <a href="${escHtml(r.url)}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1 text-brand font-semibold hover:underline">
+          <button onclick="openSourcePanel(${allResults.indexOf(r)})" class="flex items-center gap-1 text-brand font-semibold hover:underline">
             View source
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
             </svg>
-          </a>
+          </button>
         </div>
       </div>
-    </article>
-  `).join("");
+    </article>`).join("");
 }
 
 function showSkeleton() {
-  const card = `
-    <div class="bg-white rounded-2xl shadow-card overflow-hidden">
-      <div class="p-6 pl-7 space-y-3">
-        <div class="flex justify-between"><div class="skeleton h-5 w-24"></div><div class="skeleton h-4 w-24"></div></div>
-        <div class="skeleton h-5 w-3/4"></div>
-        <div class="skeleton h-4 w-full"></div>
-        <div class="skeleton h-4 w-5/6"></div>
-        <div class="skeleton h-12 w-full rounded-lg"></div>
-      </div>
-    </div>
-  `;
-  document.getElementById("results").innerHTML = `
-    <div class="text-xs text-ink-subtle mb-4">Searching procurement sources...</div>
-    <div class="space-y-3">${card}${card}${card}</div>
-  `;
+  const card = `<div class="bg-white rounded-2xl shadow-card overflow-hidden"><div class="p-6 pl-7 space-y-3">
+    <div class="flex justify-between"><div class="skeleton h-5 w-24"></div><div class="skeleton h-4 w-24"></div></div>
+    <div class="skeleton h-5 w-3/4"></div><div class="skeleton h-4 w-full"></div><div class="skeleton h-4 w-5/6"></div><div class="skeleton h-12 w-full rounded-lg"></div>
+  </div></div>`;
+  document.getElementById("results").innerHTML = `<div class="text-xs text-ink-subtle mb-4">Searching procurement sources...</div><div class="space-y-3">${card}${card}${card}</div>`;
 }
 
 function showError(msg) {
-  document.getElementById("results").innerHTML = `
-    <div class="bg-red-50 border border-red-200 rounded-2xl p-6 text-sm text-red-700">
-      <div class="font-semibold mb-1">Search failed</div>
-      <div>${escHtml(msg)}</div>
-    </div>
-  `;
+  document.getElementById("results").innerHTML = `<div class="bg-red-50 border border-red-200 rounded-2xl p-6 text-sm text-red-700"><div class="font-semibold mb-1">Search failed</div><div>${escHtml(msg)}</div></div>`;
 }
 
 function showEmpty() {
-  document.getElementById("results").innerHTML = `
-    <div class="text-center py-16">
-      <div class="text-ink font-semibold mb-1">No results found</div>
-      <div class="text-sm text-ink-muted">Try broader terms or enable more state and federal sites in configuration.</div>
-    </div>
-  `;
+  document.getElementById("results").innerHTML = `<div class="text-center py-16"><div class="text-ink font-semibold mb-1">No results found</div><div class="text-sm text-ink-muted">Try broader terms or enable more sites in configuration.</div></div>`;
 }
 
 function escHtml(s) {
-  return String(s ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+  return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function renderCheckboxList(targetId, items, name, checkedByDefault) {
+  const target = document.getElementById(targetId);
+  target.innerHTML = items.map((item) => `<label class="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-slate-50">
+    <input type="checkbox" class="${name}" value="${escHtml(item)}" ${checkedByDefault ? "checked" : ""}>
+    <span class="text-xs text-ink-muted">${escHtml(item)}</span>
+  </label>`).join("");
+}
+
+function renderBusinessTypeCheckboxes() {
+  const target = document.getElementById("businessTypes");
+  target.innerHTML = BUSINESS_TYPES.map((item) => `<label class="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-slate-50">
+    <input type="checkbox" class="business-type" value="${escHtml(item)}">
+    <span class="text-xs text-ink-muted">${escHtml(item)}</span>
+  </label>`).join("");
+  document.querySelectorAll(".business-type").forEach((cb) => {
+    cb.addEventListener("change", () => {
+      if (cb.checked) selectedBusinessTypes.add(cb.value);
+      else selectedBusinessTypes.delete(cb.value);
+      syncBusinessTypeUI();
+    });
+  });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   renderCheckboxList("federalSites", FEDERAL_SITES, "federal-site", true);
   renderCheckboxList("stateSites", STATE_SITES, "state-site", false);
-  renderBusinessTypes();
+  renderBusinessTypeCheckboxes();
+  syncBusinessTypeUI();
   document.getElementById("queryInput").addEventListener("keydown", (e) => {
     if (e.key === "Enter") runSearch();
   });

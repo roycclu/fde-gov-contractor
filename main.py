@@ -93,6 +93,7 @@ async def root(request: Request):
         "federal_sites": FEDERAL_PROCUREMENT_SITES,
         "state_sites": STATE_PROCUREMENT_SITES,
         "business_types": list(BUSINESS_TYPE_HINTS.keys()),
+        "business_type_hints": BUSINESS_TYPE_HINTS,
     })
 
 
@@ -226,6 +227,7 @@ async def exa_search(
     domains: list[str] | None,
     prefix: str,
     additional_queries: list[str] | None = None,
+    start_published_date: str | None = None,
 ) -> list:
     headers = {"x-api-key": EXA_API_KEY, "Content-Type": "application/json"}
     payload: dict[str, Any] = {
@@ -241,6 +243,8 @@ async def exa_search(
         payload["includeDomains"] = domains
     if additional_queries:
         payload["additionalQueries"] = additional_queries
+    if start_published_date:
+        payload["startPublishedDate"] = start_published_date
 
     async def post_search(run_payload: dict[str, Any]) -> list:
         async with httpx.AsyncClient(timeout=20.0) as client:
@@ -282,8 +286,15 @@ async def search(request: Request):
     business_types = normalize_business_types(body.get("business_types"))
     additional_queries = normalize_additional_queries(body.get("additional_queries"))
     for business_type in business_types:
-        additional_queries.extend(BUSINESS_TYPE_HINTS[business_type])
+        additional_queries.extend(BUSINESS_TYPE_HINTS.get(business_type, []))
     additional_queries = dedupe_keep_order(additional_queries)
+
+    raw_start_date = body.get("start_published_date") or None
+    start_published_date: str | None = None
+    if isinstance(raw_start_date, str) and raw_start_date:
+        import re
+        if re.match(r"^\d{4}-\d{2}-\d{2}", raw_start_date):
+            start_published_date = raw_start_date
 
     try:
         raw = await exa_search(
@@ -291,6 +302,7 @@ async def search(request: Request):
             domains=domains,
             prefix="federal and state government contract procurement opportunities",
             additional_queries=additional_queries,
+            start_published_date=start_published_date,
         )
     except httpx.TimeoutException:
         return JSONResponse({"error": "Search timed out — please try again."}, status_code=504)
@@ -308,8 +320,9 @@ async def search(request: Request):
             "search_context": {
                 "query": query,
                 "include_domains": domains,
-                "additional_queries": additional_queries,
                 "business_types": business_types,
+                "additional_queries": additional_queries,
+                "start_published_date": start_published_date,
             },
         })
 
@@ -330,6 +343,8 @@ async def search(request: Request):
             "date": fmt_date(raw_date),
             "raw_date": raw_date,
             "summary": build_summary(r),
+            "highlights": r.get("highlights") or [],
+            "source_excerpt": (r.get("text") or "")[:4000],
             "tag": c["tag"],
             "tag_class": c["tag_class"],
             "why": c["why"],
@@ -345,7 +360,8 @@ async def search(request: Request):
         "search_context": {
             "query": query,
             "include_domains": domains,
-            "additional_queries": additional_queries,
             "business_types": business_types,
+            "additional_queries": additional_queries,
+            "start_published_date": start_published_date,
         },
     })

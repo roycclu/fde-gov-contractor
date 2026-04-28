@@ -1,4 +1,4 @@
-# GovTrack & LegalEdge — Exa Market Intelligence Demo
+# ExaGov — Exa Market Intelligence Demo
 
 Two vertical applets demonstrating Exa's semantic search capabilities in markets outside tech and finance: **government contracting** and **legal research**.
 

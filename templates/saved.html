@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Saved Contracts — ExaGov{% endblock %}
+
+{% block content %}
+<section class="max-w-6xl mx-auto px-5 py-10">
+  <div class="max-w-3xl mb-8">
+    <div class="inline-flex items-center gap-2 bg-brand-light text-brand text-xs font-semibold px-3.5 py-1.5 rounded-full mb-4">
+      Contract Tracker
+    </div>
+    <h1 class="font-display text-[2.5rem] leading-none tracking-[-0.02em] text-ink mb-3">Saved contracts</h1>
+    <p class="text-ink-muted text-base leading-relaxed">
+      Track bookmarked opportunities here. Saved contracts stay in your browser with no backend required.
+    </p>
+  </div>
+
+  <div id="savedContractsMeta" class="text-xs text-ink-subtle mb-4"></div>
+  <div id="savedContractsList" class="space-y-3"></div>
+</section>
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+  function buildSavedSourceAction(contract) {
+    if (!contract.url) return "";
+    return `<a href="${escHtml(contract.url)}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1 text-brand font-semibold hover:underline">
+      View source
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+      </svg>
+    </a>`;
+  }
+
+  function renderSavedContracts() {
+    const items = getSavedContracts();
+    const meta = document.getElementById("savedContractsMeta");
+    const list = document.getElementById("savedContractsList");
+
+    if (!items.length) {
+      meta.textContent = "";
+      list.innerHTML = `<div class="bg-white border border-surface-border rounded-2xl shadow-card px-6 py-12 text-center">
+        <div class="text-ink font-semibold mb-1">No saved contracts yet.</div>
+        <div class="text-sm text-ink-muted">Search and bookmark opportunities to track them here.</div>
+      </div>`;
+      return;
+    }
+
+    meta.textContent = `${items.length} saved contract${items.length === 1 ? "" : "s"}`;
+    list.innerHTML = items.map((item, index) => renderContractCard(item, {
+      sourceAction: buildSavedSourceAction(item),
+      removeAction: true,
+      animationDelay: index * 0.05,
+    })).join("");
+  }
+
+  function handleSavedContractActions(e) {
+    const button = e.target.closest("[data-action]");
+    if (!button) return;
+    const contractId = button.dataset.contractId;
+    if (!contractId) return;
+
+    if (button.dataset.action === "remove-saved") {
+      removeSavedContract(contractId);
+      renderSavedContracts();
+      return;
+    }
+
+    if (button.dataset.action === "toggle-save") {
+      removeSavedContract(contractId);
+      renderSavedContracts();
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    renderSavedContracts();
+    document.getElementById("savedContractsList").addEventListener("click", handleSavedContractActions);
+    window.addEventListener("saved-contracts-updated", renderSavedContracts);
+    window.addEventListener("storage", renderSavedContracts);
+  });
+</script>
+{% endblock %}

@@ -114,6 +114,16 @@
     .prose-brief th { text-align: left; padding: .625rem .875rem; background: #F8FAFC; color: #334155; font-weight: 600; border: 1px solid #E2E8F0; }
     .prose-brief td { padding: .625rem .875rem; color: #475569; border: 1px solid #E2E8F0; }
     .prose-brief tr:nth-child(even) td { background: #F8FAFC; }
+
+    .bookmark-btn {
+      transition: transform .15s ease, color .15s ease, background-color .15s ease, border-color .15s ease;
+    }
+    .bookmark-btn:hover { transform: translateY(-1px); }
+    .bookmark-btn.is-saved {
+      color: #0A2A66;
+      background: #EAF0FA;
+      border-color: #B7C6E2;
+    }
   </style>
 </head>
 
@@ -135,6 +145,14 @@
 
       <!-- Nav -->
       <nav class="flex items-center gap-1">
+        <a href="{{ request.url_for('saved_contracts') }}"
+           class="relative flex items-center gap-2 text-slate-400 hover:text-white text-sm font-medium px-3.5 py-1.5 rounded-md hover:bg-white/10 transition-all {% if request.url.path.startswith('/saved') %}bg-white/10 text-white{% endif %}">
+          <svg class="w-4 h-4" fill="{% if request.url.path.startswith('/saved') %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-4-7 4V5z"/>
+          </svg>
+          <span>Saved</span>
+          <span id="savedContractsCount" class="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-white/15 text-[11px] leading-5 text-white text-center">0</span>
+        </a>
         <a href="{{ request.url_for('brief') }}"
            class="text-slate-400 hover:text-white text-sm font-medium px-3.5 py-1.5 rounded-md hover:bg-white/10 transition-all">
           Value Prop One Pager
@@ -166,6 +184,259 @@
       </div>
     </div>
   </footer>
+
+  <script>
+    const EXAGOV_SAVED_CONTRACTS_KEY = "exagov_saved_contracts";
+
+    function escHtml(s) {
+      return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    function parseSavedContracts() {
+      try {
+        const raw = window.localStorage.getItem(EXAGOV_SAVED_CONTRACTS_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (_err) {
+        return [];
+      }
+    }
+
+    function persistSavedContracts(items) {
+      window.localStorage.setItem(EXAGOV_SAVED_CONTRACTS_KEY, JSON.stringify(items));
+      updateSavedContractsCount();
+      window.dispatchEvent(new CustomEvent("saved-contracts-updated", { detail: { items } }));
+    }
+
+    function buildSavedContractId(contract) {
+      return contract.url || `${contract.title || "untitled"}::${contract.domain || "unknown"}::${contract.date || ""}`;
+    }
+
+    function normalizeSavedContract(contract) {
+      return {
+        id: buildSavedContractId(contract),
+        title: contract.title || "Untitled",
+        summary: contract.summary || "No summary available.",
+        url: contract.url || "",
+        domain: contract.domain || "",
+        date: contract.date || "",
+        tag: contract.tag || "Agency News",
+        tag_class: contract.tag_class || "news",
+        highlights: Array.isArray(contract.highlights) ? contract.highlights : [],
+        source_excerpt: contract.source_excerpt || "",
+        saved_at: contract.saved_at || new Date().toISOString(),
+      };
+    }
+
+    function getSavedContracts() {
+      return parseSavedContracts().map(normalizeSavedContract);
+    }
+
+    function isContractSaved(contractId) {
+      return getSavedContracts().some((item) => item.id === contractId);
+    }
+
+    function saveContract(contract) {
+      const normalized = normalizeSavedContract(contract);
+      const items = getSavedContracts().filter((item) => item.id !== normalized.id);
+      items.unshift(normalized);
+      persistSavedContracts(items);
+      return true;
+    }
+
+    function removeSavedContract(contractId) {
+      const items = getSavedContracts().filter((item) => item.id !== contractId);
+      persistSavedContracts(items);
+      return false;
+    }
+
+    function toggleSavedContract(contract) {
+      const contractId = buildSavedContractId(contract);
+      return isContractSaved(contractId) ? removeSavedContract(contractId) : saveContract(contract);
+    }
+
+    function updateSavedContractsCount() {
+      const badge = document.getElementById("savedContractsCount");
+      if (!badge) return;
+      badge.textContent = String(getSavedContracts().length);
+    }
+
+    function parseExplicitAmountMillions(text) {
+      if (!text) return null;
+      const t = String(text);
+      const values = [];
+      const unitRe = /\$?\s*(\d{1,3}(?:,\d{3})*(?:\.\d+)?)\s*(billion|million|bn|mn|m|b)\b/gi;
+      let m;
+      while ((m = unitRe.exec(t)) !== null) {
+        const num = parseFloat(m[1].replace(/,/g, ""));
+        if (!Number.isFinite(num)) continue;
+        const unit = m[2].toLowerCase();
+        values.push(unit.startsWith("b") ? num * 1000 : num);
+      }
+      const plainDollarRe = /\$\s*(\d{1,3}(?:,\d{3})+)(?!\s*(million|billion|m|b))/gi;
+      while ((m = plainDollarRe.exec(t)) !== null) {
+        const num = parseFloat(m[1].replace(/,/g, ""));
+        if (Number.isFinite(num)) values.push(num / 1_000_000);
+      }
+      if (!values.length) return null;
+      return Math.max(...values);
+    }
+
+    function inferDefaultAmountMillions(result) {
+      const text = `${result.title || ""} ${result.summary || ""} ${result.source_excerpt || ""}`.toLowerCase();
+      const hasDod = /(^|\W)(dod|defense|department of defense|army|navy|air force)(\W|$)/.test(text);
+      const hasCyberIt = /(^|\W)(cyber|cybersecurity|it|information technology|cloud|software)(\W|$)/.test(text);
+      if (hasDod && hasCyberIt) return 5;
+      if (/(logistics|supply chain|transport|warehouse|sustainment)/.test(text)) return 10;
+      if (/(professional services|consulting|advisory|program management)/.test(text)) return 3;
+      if (/(healthcare|health it|clinical|life sciences|biomedical)/.test(text)) return 4;
+      return 3;
+    }
+
+    function extractContractVehicle(text) {
+      const patterns = [
+        ["IDIQ", /\bidiq\b/i],
+        ["BOA", /\bboa\b/i],
+        ["BPA", /\bbpa\b/i],
+        ["Set-aside", /\bset[-\s]?aside\b/i],
+        ["Sole source", /\bsole source\b/i],
+        ["RFI", /\brfi\b|request for information/i],
+        ["RFP", /\brfp\b|request for proposal/i],
+        ["Sources sought", /sources?\s+sought/i],
+      ];
+      for (const [label, re] of patterns) {
+        if (re.test(text)) return label;
+      }
+      return "";
+    }
+
+    function extractSetAsideStatus(text) {
+      const patterns = [
+        ["8(a)", /\b8\(a\)\b|\b8a\b/i],
+        ["SDVOSB", /\bsdv?osb\b/i],
+        ["WOSB", /\bwosb\b/i],
+        ["HUBZone", /\bhubzone\b/i],
+        ["Small business", /small business/i],
+      ];
+      for (const [label, re] of patterns) {
+        if (re.test(text)) return label;
+      }
+      return "";
+    }
+
+    function extractDeadline(text) {
+      const re = /(?:due date|closing date|proposals?\s+due|submit by)\s*[:\-]?\s*(\d{4}-\d{2}-\d{2}|[A-Za-z]{3,9}\s+\d{1,2},?\s+\d{4}|\d{1,2}\/\d{1,2}\/\d{2,4})/i;
+      const m = text.match(re);
+      return m ? m[1] : "";
+    }
+
+    function extractIncumbentHint(text) {
+      const re = /(currently performed by|incumbent|existing contract held by)([^.\n]{0,100})/i;
+      const m = text.match(re);
+      if (!m) return "";
+      return `${m[1]}${m[2] || ""}`.trim().replace(/\s+/g, " ");
+    }
+
+    function extractBdIntel(result) {
+      const corpus = `${result.title || ""} ${result.summary || ""} ${result.source_excerpt || ""}`;
+      return {
+        contractVehicle: extractContractVehicle(corpus),
+        setAsideStatus: extractSetAsideStatus(corpus),
+        deadline: extractDeadline(corpus),
+        incumbentHint: extractIncumbentHint(corpus),
+      };
+    }
+
+    function bookmarkIcon(isSaved) {
+      return `<svg class="w-4 h-4" fill="${isSaved ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-4-7 4V5z"/>
+      </svg>`;
+    }
+
+    function renderContractCard(result, options = {}) {
+      const {
+        index = null,
+        sourceAction = "",
+        removeAction = false,
+        animationDelay = 0,
+      } = options;
+      const accentMap = { rfp: "accent-rfp", incumbent: "accent-incumbent", news: "accent-news" };
+      const tagMap = { rfp: "tag-rfp", incumbent: "tag-incumbent", news: "tag-news" };
+      const intel = extractBdIntel(result);
+      const vehicleVal = intel.contractVehicle || "Not specified";
+      const setAsideVal = intel.setAsideStatus || "Not specified";
+      const deadlineVal = intel.deadline || "Not specified";
+      const incumbentVal = intel.incumbentHint || "Not specified";
+      const contractId = buildSavedContractId(result);
+      const isSaved = isContractSaved(contractId);
+
+      return `
+      <article class="result-card relative bg-white rounded-2xl shadow-card hover:shadow-card-hover overflow-hidden" data-contract-id="${escHtml(contractId)}" style="animation-delay:${animationDelay}s">
+        <div class="absolute left-0 inset-y-0 w-[3px] ${accentMap[result.tag_class] || "accent-news"}"></div>
+        <div class="p-6 pl-7">
+          <div class="flex items-start justify-between gap-3 mb-3">
+            <div class="flex items-center flex-wrap gap-1.5 pr-2">
+              <span class="${tagMap[result.tag_class] || "tag-news"} text-xs font-semibold px-2.5 py-1 rounded-full">${escHtml(result.tag)}</span>
+              ${intel.contractVehicle ? `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">${escHtml(intel.contractVehicle)}</span>` : ""}
+              ${intel.setAsideStatus ? `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">${escHtml(intel.setAsideStatus)}</span>` : ""}
+            </div>
+            <div class="flex items-start gap-2">
+              <div class="text-right">
+                ${intel.deadline ? `<div class="text-[11px] font-semibold text-rose-700">Due ${escHtml(intel.deadline)}</div>` : ""}
+                ${result.date ? `<span class="text-xs text-ink-subtle">${escHtml(result.date)}</span>` : ""}
+              </div>
+              <button
+                type="button"
+                class="bookmark-btn ${isSaved ? "is-saved" : ""} flex items-center justify-center w-9 h-9 rounded-full border border-surface-border bg-white text-ink-subtle hover:text-brand hover:border-brand"
+                data-action="toggle-save"
+                data-contract-id="${escHtml(contractId)}"
+                aria-label="${isSaved ? "Remove saved contract" : "Save contract"}"
+                title="${isSaved ? "Remove saved contract" : "Save contract"}"
+              >
+                ${bookmarkIcon(isSaved)}
+              </button>
+            </div>
+          </div>
+          <h3 class="font-semibold text-ink text-[15px] leading-snug mb-2 tracking-[-0.01em]">${escHtml(result.title)}</h3>
+          <p class="text-sm text-ink-muted leading-relaxed mb-3">${escHtml(result.summary)}</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3 text-xs">
+            <div class="rounded-lg border border-surface-border bg-slate-50 px-2.5 py-2">
+              <div class="text-ink-subtle mb-0.5">Contract Vehicle</div>
+              <div class="text-ink">${escHtml(vehicleVal)}</div>
+            </div>
+            <div class="rounded-lg border border-surface-border bg-slate-50 px-2.5 py-2">
+              <div class="text-ink-subtle mb-0.5">Set-aside Status</div>
+              <div class="text-ink">${escHtml(setAsideVal)}</div>
+            </div>
+            <div class="rounded-lg border border-surface-border bg-slate-50 px-2.5 py-2">
+              <div class="text-ink-subtle mb-0.5">Submission Deadline</div>
+              <div class="text-ink">${escHtml(deadlineVal)}</div>
+            </div>
+            <div class="rounded-lg border border-surface-border bg-slate-50 px-2.5 py-2">
+              <div class="text-ink-subtle mb-0.5">Incumbent</div>
+              <div class="text-ink">${escHtml(incumbentVal)}</div>
+            </div>
+          </div>
+          <div class="flex items-center justify-between text-xs gap-3">
+            <span class="text-ink-subtle font-mono">${escHtml(result.domain)}</span>
+            <div class="flex items-center gap-3">
+              ${removeAction ? `<button type="button" class="text-rose-700 font-semibold hover:underline" data-action="remove-saved" data-contract-id="${escHtml(contractId)}">Remove</button>` : ""}
+              ${sourceAction || (typeof index === "number" ? `<button type="button" onclick="openSourcePanel(${index})" class="flex items-center gap-1 text-brand font-semibold hover:underline">
+                View source
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                </svg>
+              </button>` : "")}
+            </div>
+          </div>
+        </div>
+      </article>`;
+    }
+
+    document.addEventListener("DOMContentLoaded", updateSavedContractsCount);
+    window.addEventListener("storage", updateSavedContractsCount);
+  </script>
+  {% block page_scripts %}{% endblock %}
 
 </body>
 </html>

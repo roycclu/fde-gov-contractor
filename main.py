@@ -120,6 +120,12 @@ async def brief(request: Request):
     return templates.TemplateResponse(request, "brief.html", {})
 
 
+@app.get("/saved")
+@app.get("/saved/", include_in_schema=False)
+async def saved_contracts(request: Request):
+    return templates.TemplateResponse(request, "saved.html", {})
+
+
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
 def fmt_date(raw: str) -> str:

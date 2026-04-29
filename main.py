@@ -94,13 +94,16 @@ ALLOWED_SITES = set(FEDERAL_PROCUREMENT_SITES + STATE_PROCUREMENT_SITES)
 
 @app.get("/")
 async def root(request: Request):
-    return templates.TemplateResponse("govtrack.html", {
-        "request": request,
-        "federal_sites": FEDERAL_PROCUREMENT_SITES,
-        "state_sites": STATE_PROCUREMENT_SITES,
-        "business_types": list(BUSINESS_TYPE_HINTS.keys()),
-        "business_type_hints": BUSINESS_TYPE_HINTS,
-    })
+    return templates.TemplateResponse(
+        request,
+        "govtrack.html",
+        {
+            "federal_sites": FEDERAL_PROCUREMENT_SITES,
+            "state_sites": STATE_PROCUREMENT_SITES,
+            "business_types": list(BUSINESS_TYPE_HINTS.keys()),
+            "business_type_hints": BUSINESS_TYPE_HINTS,
+        },
+    )
 
 
 @app.get("/govtrack")
@@ -114,7 +117,7 @@ async def govtrack_redirect():
 @app.get("/market-brief", include_in_schema=False)
 @app.get("/market-brief/", include_in_schema=False)
 async def brief(request: Request):
-    return templates.TemplateResponse("brief.html", {"request": request})
+    return templates.TemplateResponse(request, "brief.html", {})
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────

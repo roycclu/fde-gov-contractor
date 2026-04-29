@@ -111,7 +111,19 @@ exa_gov_contractors/
 | Addressable at $200/month | **10,000-30,000 firms** |
 | ARR potential | **$24M-$72M** |
 
-#### 4. Pilot Design (3 Weeks)
+#### 4. Why Vendors Ignore This Market
+
+Fragmented public data sources, messy procurement language, and a mid-market customer base that enterprise incumbents consider low-value. That friction is the moat.
+
+#### 5. What the Product Needs Next
+
+- Saved searches and deadline alerts
+- Agency watchlists
+- NAICS/set-aside filters
+- Export to CRM or proposal tooling
+- Citation trail for compliance-sensitive users
+
+#### 6. Pilot Design (3 Weeks)
 
 | Week | Milestone |
 |---|---|
@@ -119,13 +131,14 @@ exa_gov_contractors/
 | **Week 2** | Surface 3 RFPs missed by keyword search. |
 | **Week 3** | Pull incumbent intel on top pipeline opportunities. |
 
-#### 5. Sales Barriers
+#### 7. Sales Barriers
 
 | Barrier | Response |
 |---|---|
-| Risk aversion: "We already use GovWin." | Run a side-by-side pilot using their live pipeline queries and show measurable lift. |
-| Security onboarding friction | Position ExaGov as read-only retrieval with cited sources and no PII ingestion. |
-| "SAM.gov is free" | Reframe to labor ROI: 2 hours/day manual search is materially more expensive than $200/month. |
+| "SAM.gov is free" | Labor ROI reframe: 2hrs/day at $80/hr = $40K/year hidden cost |
+| "We use GovWin" | Side-by-side pilot on live pipeline, measurable lift in 2 weeks |
+| Security friction | Read-only retrieval, no PII ingestion, cited sources only |
+| "Incumbents will copy this" | Mid-market is structurally underserved; Exa's semantic layer is the wedge, not the product category |
 
 ### Supplemental Research Appendix
 

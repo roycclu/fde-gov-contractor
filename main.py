@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from datetime import datetime
 from typing import Any
 
@@ -11,9 +12,14 @@ from fastapi.templating import Jinja2Templates
 
 load_dotenv()
 
+BASE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = BASE_DIR / "static"
+TEMPLATES_DIR = BASE_DIR / "templates"
+
 app = FastAPI(title="ExaGov — Federal Procurement Intelligence")
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+if STATIC_DIR.is_dir():
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 EXA_API_KEY = os.getenv("EXA_API_KEY", "")
 EXA_BASE = "https://api.exa.ai"
